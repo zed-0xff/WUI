@@ -1,12 +1,28 @@
 package me.zed_0xff.WUI;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.system.MemoryStack;
 
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
-class Utils {
+public class Utils {
+    /** Map glfwGetCursorPos (window coords) → framebuffer pixel coords used by glOrtho. */
+    public static double[] cursorToFramebuffer(long win, double cxWin, double cyWin) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer winW = stack.mallocInt(1), winH = stack.mallocInt(1);
+            IntBuffer fbW  = stack.mallocInt(1), fbH  = stack.mallocInt(1);
+            GLFW.glfwGetWindowSize(win, winW, winH);
+            GLFW.glfwGetFramebufferSize(win, fbW, fbH);
+            int ww = winW.get(0), wh = winH.get(0);
+            if (ww <= 0 || wh <= 0) return new double[]{ cxWin, cyWin };
+            return new double[]{ cxWin * fbW.get(0) / ww, cyWin * fbH.get(0) / wh };
+        }
+    }
+
     static long packPair(int first, int second) {
         return ((long) first << 32) | (second & 0xffffffffL);
     }

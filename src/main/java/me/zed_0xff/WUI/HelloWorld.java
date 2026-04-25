@@ -56,13 +56,13 @@ public final class HelloWorld {
         GLFW.glfwSetMouseButtonCallback(glWindow, (win, button, action, mods) -> {
             double[] cx = new double[1], cy = new double[1];
             GLFW.glfwGetCursorPos(win, cx, cy);
-            double[] f = cursorToFramebuffer(win, cx[0], cy[0]);
+            double[] f = Utils.cursorToFramebuffer(win, cx[0], cy[0]);
             int scale = uiScale();
             window.handleMouseButton(win, button, action, (int)(f[0] / scale), (int)(f[1] / scale));
         });
 
         GLFW.glfwSetCursorPosCallback(glWindow, (win, xpos, ypos) -> {
-            double[] f = cursorToFramebuffer(win, xpos, ypos);
+            double[] f = Utils.cursorToFramebuffer(win, xpos, ypos);
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 IntBuffer fbw = stack.mallocInt(1), fbh = stack.mallocInt(1);
                 GLFW.glfwGetFramebufferSize(win, fbw, fbh);
@@ -137,19 +137,6 @@ public final class HelloWorld {
             GL11.glOrtho(0, w / scale, h / scale, 0, -1, 1);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
-        }
-    }
-
-    /** Map glfwGetCursorPos (window coords) to framebuffer pixel coords used by glOrtho. */
-    static double[] cursorToFramebuffer(long glWindow, double cxWin, double cyWin) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer winW = stack.mallocInt(1), winH = stack.mallocInt(1);
-            IntBuffer fbw  = stack.mallocInt(1), fbh  = stack.mallocInt(1);
-            GLFW.glfwGetWindowSize(glWindow, winW, winH);
-            GLFW.glfwGetFramebufferSize(glWindow, fbw, fbh);
-            int ww = winW.get(0), wh = winH.get(0);
-            if (ww <= 0 || wh <= 0) return new double[]{cxWin, cyWin};
-            return new double[]{cxWin * fbw.get(0) / ww, cyWin * fbh.get(0) / wh};
         }
     }
 }
