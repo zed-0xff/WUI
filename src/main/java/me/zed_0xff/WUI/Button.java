@@ -11,15 +11,12 @@ class Button extends ButtonBase {
     }
 
     @Override
-    public void render(int fontTex, int originX, int originY) {
-        int bx = originX + x;
-        int by = originY + y;
-
+    public void render(int originX, int originY) {
+        int bx = originX + x, by = originY + y;
         ElementDecor deco = (pressed && _pressedDeco.isLoaded()) ? _pressedDeco : _normalDeco;
         deco.render(bx, by, width, height, bgColor);
-
         if (text != null && !text.isEmpty()) {
-            withTexture(fontTex, () -> {
+            withTexture(font.fontTex, () -> {
                 glColor(textColor);
                 font.drawTextCentered(bx, by + deco.textY, width, text);
             });

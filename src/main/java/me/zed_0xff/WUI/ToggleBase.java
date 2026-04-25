@@ -26,10 +26,9 @@ abstract class ToggleBase extends ButtonBase {
     }
 
     @Override
-    public void render(int fontTex, int originX, int originY) {
+    public void render(int originX, int originY) {
         Atlas a = getAtlas();
-        int bx = originX + x;
-        int by = originY + y;
+        int bx = originX + x, by = originY + y;
 
         if (a.isLoaded()) {
             if (a.texId == 0) a.texId = a.uploadTexture();
@@ -49,7 +48,7 @@ abstract class ToggleBase extends ButtonBase {
         if (text != null && !text.isEmpty()) {
             int textX = a.getMetaInt("textX", height + 2);
             int textY = a.getMetaInt("textY", 0);
-            withTexture(fontTex, () -> {
+            withTexture(font.fontTex, () -> {
                 glColor(textColor);
                 font.drawText(bx + textX, by + textY, text);
             });

@@ -6,10 +6,10 @@ class Label extends TextControl {
     }
 
     @Override
-    public void render(int fontTex, int originX, int originY) {
+    public void render(int originX, int originY) {
         if (text == null || text.isEmpty()) return;
         int tx = originX + x, ty = originY + y;
-        withTexture(fontTex, () -> {
+        withTexture(font.fontTex, () -> {
             glColor(textColor);
             font.drawText(tx, ty, text);
         });

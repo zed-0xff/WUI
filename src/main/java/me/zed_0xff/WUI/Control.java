@@ -10,7 +10,7 @@ abstract class Control extends Element {
     }
 
     /** Render this control at (originX + x, originY + y). */
-    public abstract void render(int fontTex, int originX, int originY);
+    public abstract void render(int originX, int originY);
 
     /**
      * The interactive area of this control (in the control's own coordinate space).

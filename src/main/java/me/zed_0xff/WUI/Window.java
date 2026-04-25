@@ -277,12 +277,12 @@ public class Window extends Element {
         }
     }
 
-    public void render(int fontTex) {
+    public void render() {
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
         _deco.render(x, y, width, height, bgColor);
 
-        withTexture(fontTex, () -> {
+        withTexture(font.fontTex, () -> {
             glColor(titleFgColor);
             font.drawTextCentered(x, y + _deco.textY, width, title);
         });
@@ -301,9 +301,7 @@ public class Window extends Element {
                 contentRect.w() * scale,
                 contentRect.h() * scale
             );
-            for (Control c : controls) {
-                c.render(fontTex, contentRect.x(), contentRect.y());
-            }
+            for (Control c : controls) c.render(contentRect.x(), contentRect.y());
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
         }
     }
