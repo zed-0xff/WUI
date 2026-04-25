@@ -1,6 +1,5 @@
 package me.zed_0xff.WUI;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,12 +47,11 @@ class Font {
     }
 
     public Font() {
-        File jsonFile = new File("font.json");
-        FontJson cfg = Atlas.readJson(jsonFile, new Gson(), FontJson.class);
-        if (cfg == null) throw new IllegalStateException("failed reading " + jsonFile);
-        if (cfg.glyphs == null || cfg.glyphs.isEmpty()) throw new IllegalStateException("no glyphs in " + jsonFile);
+        FontJson cfg = Atlas.readJson("/font.json", new Gson(), FontJson.class);
+        if (cfg == null) throw new IllegalStateException("failed reading /font.json from classpath");
+        if (cfg.glyphs == null || cfg.glyphs.isEmpty()) throw new IllegalStateException("no glyphs in font.json");
 
-        Atlas a = Atlas.load(jsonFile.getParentFile(), cfg.atlas.image, cfg.atlas.width, cfg.atlas.height);
+        Atlas a = Atlas.loadResource("/" + cfg.atlas.image, cfg.atlas.width, cfg.atlas.height);
         if (a == null) throw new RuntimeException("failed loading font atlas: " + cfg.atlas.image);
         atlasW = a.w;
         atlasH = a.h;
@@ -93,12 +91,8 @@ class Font {
         return relX;
     }
 
-    /**
-     * @param y of the first line’s top (glWindow coords, origin top-left).
-     * @param scale integer scale factor (font pixels → screen pixels).
-     */
+    /** Draw {@code s} starting at ({@code x}, {@code y}), top-left origin, y downward. */
     void drawText(int x, int y, String s) {
-        int scale = 1;
         int relX = 0;
         int relLineY = 0;
         int prevCp = -1;
@@ -126,10 +120,10 @@ class Font {
 
             GlyphJson g = glyphById.getOrDefault(cp, spaceGlyph);
             if (g.w > 0 && g.h > 0) {
-                float sx = x + (relX + g.xo) * scale;
-                float sy = y + (relLineY + g.yo) * scale;
-                float x1 = sx + g.w * scale;
-                float y1 = sy + g.h * scale;
+                float sx = x + relX + g.xo;
+                float sy = y + relLineY + g.yo;
+                float x1 = sx + g.w;
+                float y1 = sy + g.h;
 
                 float u0 = g.x / (float) atlasW;
                 float u1 = (g.x + g.w) / (float) atlasW;

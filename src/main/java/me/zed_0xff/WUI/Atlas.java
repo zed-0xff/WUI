@@ -5,8 +5,8 @@ import com.google.gson.Gson;
 import org.lwjgl.BufferUtils;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -14,8 +14,7 @@ import javax.imageio.ImageIO;
 
 /**
  * Loaded image atlas shared by {@link ElementDecor} and {@link CursorMgr}.
- * Handles PNG loading, atlas-size validation, tile bounds checking,
- * GL texture upload, and RGBA cell extraction.
+ * All assets are loaded from the JAR classpath (e.g. {@code /window.json}).
  */
 final class Atlas {
     final BufferedImage img;
@@ -28,16 +27,13 @@ final class Atlas {
         this.img = img; this.w = w; this.h = h;
     }
 
-    /** Load atlas by name: reads {@code {name}.json} + its image. */
-    Atlas(String name) { this(new File(name + ".json")); }
-
-    /** Load atlas from an explicit JSON file + its image. */
-    Atlas(File jsonFile) {
-        JsonBase cfg = readJson(jsonFile, new Gson(), JsonBase.class);
+    /** Load atlas by name: reads {@code /{name}.json} + its image from the classpath. */
+    Atlas(String name) {
+        JsonBase cfg = readJson("/" + name + ".json", new Gson(), JsonBase.class);
         BufferedImage loaded = null;
         int lw = 0, lh = 0;
         if (cfg != null && cfg.image != null && cfg.atlas != null) {
-            Atlas a = load(jsonFile.getParentFile(), cfg.image, cfg.atlas.width, cfg.atlas.height);
+            Atlas a = loadResource("/" + cfg.image, cfg.atlas.width, cfg.atlas.height);
             if (a != null) { loaded = a.img; lw = a.w; lh = a.h; }
         }
         this.img = loaded; this.w = lw; this.h = lh;
@@ -58,33 +54,23 @@ final class Atlas {
         try { return Integer.parseInt(v); } catch (NumberFormatException e) { return fallback; }
     }
 
-
     /**
-     * Load a PNG and verify it matches the declared atlas dimensions.
-     * @param dir       directory that contains the image (may be null → use CWD)
-     * @param imageName file name relative to {@code dir}
-     * @return loaded Atlas, or {@code null} on any error (error printed to stderr)
+     * Load a PNG from the classpath and verify it matches the declared atlas dimensions.
+     * @return loaded Atlas, or {@code null} on any error
      */
-    static Atlas load(File dir, String imageName, int atlasW, int atlasH) {
-        if (atlasW < 1 || atlasH < 1) {
-            warn("invalid size " + atlasW + "x" + atlasH);
-            return null;
-        }
-        File png = new File(dir != null ? dir : new File("."), imageName);
+    static Atlas loadResource(String resourcePath, int atlasW, int atlasH) {
+        if (atlasW < 1 || atlasH < 1) { warn("invalid size " + atlasW + "x" + atlasH); return null; }
         BufferedImage img;
-        try {
-            img = ImageIO.read(png);
+        try (InputStream is = Atlas.class.getResourceAsStream(resourcePath)) {
+            if (is == null) { warn("resource not found: " + resourcePath); return null; }
+            img = ImageIO.read(is);
         } catch (IOException e) {
-            warn("failed reading " + png.getPath() + ": " + e.getMessage());
-            return null;
+            warn("failed reading " + resourcePath + ": " + e.getMessage()); return null;
         }
-        if (img == null) {
-            warn("ImageIO returned null for " + png.getPath());
-            return null;
-        }
+        if (img == null) { warn("ImageIO returned null for " + resourcePath); return null; }
         if (img.getWidth() != atlasW || img.getHeight() != atlasH) {
             warn("png " + img.getWidth() + "x" + img.getHeight()
-                + " != declared " + atlasW + "x" + atlasH + " (" + png.getPath() + ")");
+                + " != declared " + atlasW + "x" + atlasH + " (" + resourcePath + ")");
             return null;
         }
         return new Atlas(img, atlasW, atlasH);
@@ -112,14 +98,11 @@ final class Atlas {
         return buf;
     }
 
-    /** Parse a JSON file into an object of type {@code cls}. Returns {@code null} on any error. */
-    static <T> T readJson(File jsonFile, Gson gson, Class<T> cls) {
-        if (jsonFile == null || !jsonFile.isFile() || gson == null) {
-            return null;
-        }
-        try (InputStreamReader r = new InputStreamReader(
-                java.nio.file.Files.newInputStream(jsonFile.toPath()), StandardCharsets.UTF_8)) {
-            return gson.fromJson(r, cls);
+    /** Parse a classpath JSON resource into {@code cls}. Returns {@code null} on any error. */
+    static <T> T readJson(String resourcePath, Gson gson, Class<T> cls) {
+        try (InputStream is = Atlas.class.getResourceAsStream(resourcePath)) {
+            if (is == null) return null;
+            return gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), cls);
         } catch (IOException e) {
             return null;
         }

@@ -4,7 +4,6 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.system.MemoryStack;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -16,15 +15,15 @@ public final class CursorMgr {
     private CursorMgr() {}
 
     private static final String[] TILE_NAMES = {
-        "arrow", "resizeH", "resizeW", "resizeNWSE", "resizeNESW", "text", "hand", "clock"
+        "arrow", "resizeH", "resizeV", "resizeNWSE", "resizeNESW", "text", "hand", "clock"
     };
 
-    /** Load custom cursors from JSON; falls back to GLFW standard cursors on any failure. */
-    public static void create(File cursorsJson) {
+    /** Load custom cursors from classpath; falls back to GLFW standard cursors on any failure. */
+    public static void create() {
         if (initialized) return;
         initialized = true;
 
-        Atlas atlas = new Atlas(cursorsJson);
+        Atlas atlas = new Atlas("cursors");
         if (!atlas.isLoaded() || atlas.tiles == null
                 || !atlas.tiles.keySet().containsAll(Arrays.asList(TILE_NAMES))) {
             createStandard(); return;

@@ -5,15 +5,11 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryStack;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.IntBuffer;
 
 public final class HelloWorld {
     static final int WIN_W = 640;
     static final int WIN_H = 480;
-
-    static Font font;
 
     private static final int[] SCALES = {1, 2, 3};
     private static volatile int scaleIdx = 1;
@@ -34,7 +30,7 @@ public final class HelloWorld {
         window.render(fontTex);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (!GLFW.glfwInit()) throw new IllegalStateException("glfwInit failed");
 
         long glWindow = GLFW.glfwCreateWindow(WIN_W, WIN_H, "Desktop", 0, 0);
@@ -45,17 +41,19 @@ public final class HelloWorld {
         GL.createCapabilities();
         initGlState();
 
-        File assets = new File(".");
-        File cursorsJson = new File(assets, "cursors.json");
-        CursorMgr.create(cursorsJson);
+        CursorMgr.create();
 
         Window window = new Window(80, 48, 420, 260, "Window")
                 .addControl(w -> new Button(     w, 10, 10, 100, 20, "OK"))
                 .addControl(w -> new CheckBox(   w, 10, 40, 100, 20, "test"))
-                .addControl(w -> new RadioButton(w, 10, 70, 100, 20, "R1", "A"))
-                .addControl(w -> new RadioButton(w, 50, 70, 100, 20, "R2", "A"))
-                .addControl(w -> new RadioButton(w, 10, 90, 100, 20, "R3", "B"))
-                .addControl(w -> new RadioButton(w, 50, 90, 100, 20, "R4", "B"));
+                .addRadioGroup(g -> {
+                    g.button(10, 70, 100, 20, "R1");
+                    g.button(50, 70, 100, 20, "R2");
+                })
+                .addRadioGroup(g -> {
+                    g.button(10, 90, 100, 20, "R3");
+                    g.button(50, 90, 100, 20, "R4");
+                });
 
         GLFW.glfwSetMouseButtonCallback(glWindow, (win, button, action, mods) -> {
             double[] cx = new double[1];

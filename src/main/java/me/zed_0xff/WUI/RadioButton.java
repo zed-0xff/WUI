@@ -4,21 +4,19 @@ import org.lwjgl.opengl.GL11;
 
 class RadioButton extends ToggleBase {
     private static final Atlas ATLAS = new Atlas("radiobutton");
-    private final String key;
+    private final RadioGroup group;
 
-    public RadioButton(Window window, int x, int y, int w, int h, String text, String key) {
-        super(window, x, y, w, h, text);
-        this.key = key;
-        window.registerRadioButton(this);
+    public RadioButton(RadioGroup group, int x, int y, int w, int h, String text) {
+        super(group.getWindow(), x, y, w, h, text);
+        this.group = group;
+        group.add(this);
     }
-
-    String getKey() { return key; }
 
     @Override protected Atlas getAtlas() { return ATLAS; }
 
     @Override
     protected void onClick() {
-        if (!checked) window.onRadioButtonChecked(this);
+        if (!checked) group.select(this);
     }
 
     @Override

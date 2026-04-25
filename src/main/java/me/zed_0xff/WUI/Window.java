@@ -6,7 +6,6 @@ import org.lwjgl.opengl.GL11;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -17,7 +16,6 @@ public class Window extends Element {
     Color bgColor = Color.WHITE;
     String title, status;
     private final List<Control> controls = new ArrayList<>();
-    private final HashMap<String, RadioGroup> radioButtons = new HashMap<>();
 
     // static final Color titleBgColor = Color.NAVY;
     static final Color titleFgColor = Color.WHITE;
@@ -58,18 +56,15 @@ public class Window extends Element {
         return this;
     }
 
-    void registerRadioButton(RadioButton rb) {
-        radioButtons.computeIfAbsent(rb.getKey(), k -> new RadioGroup()).add(rb);
+    public Window addRadioGroup(java.util.function.Consumer<RadioGroup> builder) {
+        RadioGroup g = new RadioGroup(this);
+        builder.accept(g);
+        controls.addAll(g.buttons);
+        return this;
     }
 
-    public void setTitle(String s) {
-        this.title = s;
-    }
-
-    public void setStatus(String s) {
-        this.status = s;
-    }
-
+    public void setTitle(String s) { this.title = s; }
+    public void setStatus(String s) { this.status = s; }
 
     public boolean contains(int mx, int my) {
         return mx >= x && mx < x + width && my >= y && my < y + height;
@@ -101,30 +96,14 @@ public class Window extends Element {
         boolean onW = mx >= x0 && mx < x0 + EDGE;
         boolean onE = mx > x1 - EDGE && mx <= x1;
 
-        if (onN && mx < x0 + GRIP) {
-            return ResizeGrip.NW;
-        }
-        if (onN && mx > x1 - GRIP) {
-            return ResizeGrip.NE;
-        }
-        if (onS && mx < x0 + GRIP) {
-            return ResizeGrip.SW;
-        }
-        if (onS && mx > x1 - GRIP) {
-            return ResizeGrip.SE;
-        }
-        if (onN) {
-            return ResizeGrip.N;
-        }
-        if (onS) {
-            return ResizeGrip.S;
-        }
-        if (onW) {
-            return ResizeGrip.W;
-        }
-        if (onE) {
-            return ResizeGrip.E;
-        }
+        if (onN && mx < x0 + GRIP) return ResizeGrip.NW;
+        if (onN && mx > x1 - GRIP) return ResizeGrip.NE;
+        if (onS && mx < x0 + GRIP) return ResizeGrip.SW;
+        if (onS && mx > x1 - GRIP) return ResizeGrip.SE;
+        if (onN) return ResizeGrip.N;
+        if (onS) return ResizeGrip.S;
+        if (onW) return ResizeGrip.W;
+        if (onE) return ResizeGrip.E;
         return ResizeGrip.NONE;
     }
 
@@ -167,26 +146,22 @@ public class Window extends Element {
 
         switch (activeResize) {
             case SE:
-                x = sx;
-                y = sy;
+                x = sx; y = sy;
                 width = Math.max(MIN_W, mx - sx);
                 height = Math.max(MIN_H, my - sy);
                 break;
             case NE:
-                x = sx;
-                y = my;
+                x = sx; y = my;
                 width = Math.max(MIN_W, mx - sx);
                 height = Math.max(MIN_H, bot - y);
                 break;
             case NW:
-                x = mx;
-                y = my;
+                x = mx; y = my;
                 width = Math.max(MIN_W, right - x);
                 height = Math.max(MIN_H, bot - y);
                 break;
             case SW:
-                x = mx;
-                y = sy;
+                x = mx; y = sy;
                 width = Math.max(MIN_W, right - x);
                 height = Math.max(MIN_H, my - sy);
                 break;
@@ -219,17 +194,14 @@ public class Window extends Element {
      * @param mx,my logical coords (framebuffer px / {@link HelloWorld#uiScale})
      */
     public boolean handleMouseButton(long window, int button, int action, int mx, int my) {
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            return false;
-        }
+        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
+
         if (action == GLFW.GLFW_PRESS) {
             ResizeGrip g = hitTestResize(mx, my);
             if (g != ResizeGrip.NONE) {
                 activeResize = g;
-                resizeSnapX = x;
-                resizeSnapY = y;
-                resizeSnapW = width;
-                resizeSnapH = height;
+                resizeSnapX = x; resizeSnapY = y;
+                resizeSnapW = width; resizeSnapH = height;
                 return true;
             }
             if (titleDragZone(mx, my)) {
@@ -279,18 +251,10 @@ public class Window extends Element {
 
     /** Move only: keep window on-screen without changing {@link #width} / {@link #height}. */
     private void clampPositionInView(int viewW, int viewH) {
-        if (x + width > viewW) {
-            x = viewW - width;
-        }
-        if (y + height > viewH) {
-            y = viewH - height;
-        }
-        if (x < 0) {
-            x = 0;
-        }
-        if (y < 0) {
-            y = 0;
-        }
+        if (x + width > viewW) x = viewW - width;
+        if (y + height > viewH) y = viewH - height;
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
     }
 
     /** After resize: cap size to the desktop and enforce {@link #MIN_W}×{@link #MIN_H}, then position. */
@@ -342,13 +306,5 @@ public class Window extends Element {
             }
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
         }
-    }
-
-    public void close() {
-    }
-
-    void onRadioButtonChecked(RadioButton radio) {
-        RadioGroup group = radioButtons.get(radio.getKey());
-        if (group != null) group.select(radio);
     }
 }

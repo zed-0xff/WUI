@@ -4,31 +4,11 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import javax.imageio.ImageIO;
 
 class Utils {
     static long packPair(int first, int second) {
         return ((long) first << 32) | (second & 0xffffffffL);
-    }
-
-    /**
-     * @return texture id, or {@code 0} if missing/unreadable
-     */
-    static int loadTexture2d(File path) {
-        BufferedImage img;
-        try {
-            img = ImageIO.read(path);
-        } catch (IOException e) {
-            return 0;
-        }
-        if (img == null) {
-            return 0;
-        }
-        return uploadRgbaTexture2d(img);
     }
 
     static void putArgbAsRgba(ByteBuffer buf, int argb) {
