@@ -1,6 +1,6 @@
 package me.zed_0xff.WUI;
 
-class Label extends TextControl {
+public class Label extends TextControl {
     public Label(Window window, int x, int y, int w, int h, String text) {
         super(window, x, y, w, h, text);
     }

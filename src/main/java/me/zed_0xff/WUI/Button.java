@@ -1,6 +1,6 @@
 package me.zed_0xff.WUI;
 
-class Button extends ButtonBase {
+public class Button extends ButtonBase {
     static final ElementDecor _normalDeco  = new ElementDecor("button");
     static final ElementDecor _pressedDeco = new ElementDecor("buttonDown");
 

@@ -2,7 +2,7 @@ package me.zed_0xff.WUI;
 
 import org.lwjgl.opengl.GL11;
 
-class CheckBox extends ToggleBase {
+public class CheckBox extends ToggleBase {
     private static final Atlas ATLAS = new Atlas("checkbox");
 
     public CheckBox(Window window, int x, int y, int w, int h, String text) {

@@ -2,7 +2,7 @@ package me.zed_0xff.WUI;
 
 import org.lwjgl.opengl.GL11;
 
-abstract class Element {
+public abstract class Element {
     public int x, y, width, height;
 
     static Font font = new Font();

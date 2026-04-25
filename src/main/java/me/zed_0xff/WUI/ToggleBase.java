@@ -2,7 +2,7 @@ package me.zed_0xff.WUI;
 
 import org.lwjgl.opengl.GL11;
 
-abstract class ToggleBase extends ButtonBase {
+public abstract class ToggleBase extends ButtonBase {
     boolean checked;
 
     public ToggleBase(Window window, int x, int y, int w, int h, String text) {

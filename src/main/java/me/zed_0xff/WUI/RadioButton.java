@@ -2,7 +2,7 @@ package me.zed_0xff.WUI;
 
 import org.lwjgl.opengl.GL11;
 
-class RadioButton extends ToggleBase {
+public class RadioButton extends ToggleBase {
     private static final Atlas ATLAS = new Atlas("radiobutton");
     private final RadioGroup group;
 

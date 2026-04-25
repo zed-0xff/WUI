@@ -3,7 +3,7 @@ package me.zed_0xff.WUI;
 import java.util.ArrayList;
 import java.util.List;
 
-final class RadioGroup {
+public final class RadioGroup {
     private final Window window;
     final List<RadioButton> buttons = new ArrayList<>();
 

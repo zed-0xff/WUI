@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.google.gson.Gson;
 
-class Font {
+public class Font {
     Map<Integer, GlyphJson> glyphById = new HashMap<>();
     Map<Long, Integer> kernAmount = new HashMap<>();
     GlyphJson spaceGlyph;

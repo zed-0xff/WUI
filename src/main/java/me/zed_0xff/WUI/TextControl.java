@@ -1,7 +1,7 @@
 package me.zed_0xff.WUI;
 
 /** A {@link Control} that carries a text label and text color. */
-abstract class TextControl extends Control {
+public abstract class TextControl extends Control {
     String text;
     Color textColor = Color.BLACK;
 

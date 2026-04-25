@@ -2,7 +2,7 @@ package me.zed_0xff.WUI;
 
 import org.lwjgl.glfw.GLFW;
 
-abstract class ButtonBase extends TextControl {
+public abstract class ButtonBase extends TextControl {
     boolean pressed;
 
     public ButtonBase(Window window, int x, int y, int w, int h, String text) {

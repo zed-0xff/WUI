@@ -1,6 +1,6 @@
 package me.zed_0xff.WUI;
 
-abstract class Control extends Element {
+public abstract class Control extends Element {
     public boolean enabled = true;
     final Window window;
 
