@@ -109,11 +109,11 @@ public class Window extends Element {
 
     private static long cursorForGrip(ResizeGrip g) {
         switch (g) {
-            case N: case S: return CursorMgr.resizeV;
-            case E: case W: return CursorMgr.resizeH;
-            case NW: case SE: return CursorMgr.curNWSE;
-            case NE: case SW: return CursorMgr.curNESW;
-            default: return CursorMgr.arrow;
+            case N: case S: return CursorMgr.resizeV();
+            case E: case W: return CursorMgr.resizeH();
+            case NW: case SE: return CursorMgr.curNWSE();
+            case NE: case SW: return CursorMgr.curNESW();
+            default: return CursorMgr.arrow();
         }
     }
 

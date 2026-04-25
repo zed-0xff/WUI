@@ -39,9 +39,7 @@ abstract class ToggleBase extends ButtonBase {
             if (t != null && a.texId != 0) {
                 withTexture(a.texId, () -> {
                     GL11.glColor3f(1f, 1f, 1f);
-                    float u0 = t.x / (float) a.w, v0 = t.y / (float) a.h;
-                    float u1 = (t.x + t.w) / (float) a.w, v1 = (t.y + t.h) / (float) a.h;
-                    drawTexRect(bx, by, t.w, t.h, u0, v0, u1, v1);
+                    drawTexRect(bx, by, t.w, t.h, t, a.w, a.h);
                 });
             }
         } else {

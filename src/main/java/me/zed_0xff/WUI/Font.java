@@ -67,25 +67,14 @@ class Font {
 
     /** Horizontal advance of the first line, in font pixels (same rules as {@link #drawText}). */
     int measureTextAdvancePx(String s) {
-        if (s == null || s.isEmpty()) {
-            return 0;
-        }
-        int relX = 0;
-        int prevCp = -1;
+        if (s == null || s.isEmpty()) return 0;
+        int relX = 0, prevCp = -1;
         for (int off = 0; off < s.length();) {
             int cp = s.codePointAt(off);
             off += Character.charCount(cp);
-            if (cp == '\n') {
-                break;
-            }
-            if (prevCp >= 0) {
-                Integer k = kernAmount.get(Utils.packPair(prevCp, cp));
-                if (k != null) {
-                    relX += k;
-                }
-            }
-            GlyphJson g = glyphById.getOrDefault(cp, spaceGlyph);
-            relX += g.xa;
+            if (cp == '\n') break;
+            if (prevCp >= 0) relX += kerningDelta(prevCp, cp);
+            relX += glyphById.getOrDefault(cp, spaceGlyph).xa;
             prevCp = cp;
         }
         return relX;
@@ -93,54 +82,31 @@ class Font {
 
     /** Draw {@code s} starting at ({@code x}, {@code y}), top-left origin, y downward. */
     void drawText(int x, int y, String s) {
-        int relX = 0;
-        int relLineY = 0;
-        int prevCp = -1;
+        int relX = 0, relLineY = 0, prevCp = -1;
         int lineSkip = face.lineHeight;
 
         GL11.glBegin(GL11.GL_QUADS);
-
         for (int off = 0; off < s.length();) {
             int cp = s.codePointAt(off);
             off += Character.charCount(cp);
-
-            if (cp == '\n') {
-                relX = 0;
-                relLineY += lineSkip;
-                prevCp = -1;
-                continue;
-            }
-
-            if (prevCp >= 0) {
-                Integer k = kernAmount.get(Utils.packPair(prevCp, cp));
-                if (k != null) {
-                    relX += k;
-                }
-            }
-
+            if (cp == '\n') { relX = 0; relLineY += lineSkip; prevCp = -1; continue; }
+            if (prevCp >= 0) relX += kerningDelta(prevCp, cp);
             GlyphJson g = glyphById.getOrDefault(cp, spaceGlyph);
             if (g.w > 0 && g.h > 0) {
-                float sx = x + relX + g.xo;
-                float sy = y + relLineY + g.yo;
-                float x1 = sx + g.w;
-                float y1 = sy + g.h;
-
-                float u0 = g.x / (float) atlasW;
-                float u1 = (g.x + g.w) / (float) atlasW;
-                float v0 = g.y / (float) atlasH;
-                float v1 = (g.y + g.h) / (float) atlasH;
-
-                GL11.glTexCoord2f(u0, v0); GL11.glVertex2f(sx, sy);
-                GL11.glTexCoord2f(u1, v0); GL11.glVertex2f(x1, sy);
-                GL11.glTexCoord2f(u1, v1); GL11.glVertex2f(x1, y1);
-                GL11.glTexCoord2f(u0, v1); GL11.glVertex2f(sx, y1);
+                float sx = x + relX + g.xo, sy = y + relLineY + g.yo;
+                Element.glTexQuad(sx, sy, sx + g.w, sy + g.h,
+                    g.x / (float) atlasW,         g.y / (float) atlasH,
+                    (g.x + g.w) / (float) atlasW, (g.y + g.h) / (float) atlasH);
             }
-
             relX += g.xa;
             prevCp = cp;
         }
-
         GL11.glEnd();
+    }
+
+    private int kerningDelta(int prevCp, int cp) {
+        Integer k = kernAmount.get(Utils.packPair(prevCp, cp));
+        return k != null ? k : 0;
     }
 
     /**

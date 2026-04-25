@@ -2,7 +2,7 @@ package me.zed_0xff.WUI;
 
 import org.lwjgl.glfw.GLFW;
 
-abstract class ButtonBase extends Label {
+abstract class ButtonBase extends TextControl {
     boolean pressed;
 
     public ButtonBase(Window window, int x, int y, int w, int h, String text) {
@@ -11,7 +11,7 @@ abstract class ButtonBase extends Label {
 
     @Override
     public long cursorAt(int mx, int my) {
-        return (enabled && isActiveAt(mx, my)) ? CursorMgr.hand : 0;
+        return (enabled && isActiveAt(mx, my)) ? CursorMgr.hand() : 0;
     }
 
     @Override

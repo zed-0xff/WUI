@@ -64,16 +64,17 @@ final class ElementDecor {
         });
     }
 
+    private static final String[] SLICE_KEYS = {
+        "topLeft",    "topCenter",    "topRight",
+        "middleLeft", "middleCenter", "middleRight",
+        "bottomLeft", "bottomCenter", "bottomRight"
+    };
+
     private void loadFromJson(String name) {
         Atlas atlas = new Atlas(name);
         if (!atlas.isLoaded() || atlas.tiles == null) { warn("atlas load failed"); return; }
 
-        String[] keys = {
-            "topLeft",   "topCenter",   "topRight",
-            "middleLeft","middleCenter","middleRight",
-            "bottomLeft","bottomCenter","bottomRight"
-        };
-        for (String k : keys) {
+        for (String k : SLICE_KEYS) {
             Atlas.TileJson t = atlas.tiles.get(k);
             if (t == null || !atlas.fits(t)) { warn("bad tile: " + k); return; }
         }
@@ -95,9 +96,7 @@ final class ElementDecor {
 
     private void blit(Atlas.TileJson r, int sx, int sy, int sw, int sh) {
         if (sw <= 0 || sh <= 0) return;
-        float u0 = r.x / (float) atlasW, v0 = r.y / (float) atlasH;
-        float u1 = (r.x + r.w) / (float) atlasW, v1 = (r.y + r.h) / (float) atlasH;
-        Element.drawTexRect(sx, sy, sw, sh, u0, v0, u1, v1);
+        Element.drawTexRect(sx, sy, sw, sh, r, atlasW, atlasH);
     }
 
     private void warn(String msg) { System.err.println("ElementDecor(" + name + "): " + msg); }
