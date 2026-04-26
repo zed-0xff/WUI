@@ -90,6 +90,42 @@ public final class Session implements Runnable {
     }
 
     // -------------------------------------------------------------------------
+    // Blocking render loop (caller IS the render thread)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Drive the session synchronously on the calling thread until dismissed.
+     *
+     * <p>Use this when the caller <em>is</em> the render thread and there is no
+     * external frame loop to piggy-back on (e.g. called during game loading before
+     * {@code UIManager.update()} starts).  The method calls {@link #run()} and
+     * swaps buffers each iteration.
+     *
+     * <p>Must be called from the thread that owns the OpenGL context (the render
+     * thread, e.g. {@code Java: MainThread} in Project Zomboid).  Do <em>not</em>
+     * call {@code glfwPollEvents()} here — on macOS that must stay on the Cocoa
+     * main thread (Thread 0) which already runs PZ's GLFW event pump.
+     * {@link #pollMouse()} reads cached GLFW state so it works correctly without
+     * an additional poll.
+     */
+    public void runLoop() {
+        while (!isDone()) {
+            run();
+            GLFW.glfwSwapBuffers(glfwWin);
+            try {
+                Thread.sleep(16);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                dismiss();
+            }
+        }
+    }
+
+    public static void init() {
+        CursorMgr.init();
+    }
+
+    // -------------------------------------------------------------------------
     // Called from the render thread each frame
     // -------------------------------------------------------------------------
 
@@ -97,21 +133,9 @@ public final class Session implements Runnable {
     public void run() {
         if (isDone()) return;
 
-        if (window == null) {
-            if (scale < 1) {
-                scale = Utils.detectScale(glfwWin);
-            }
-            CursorMgr.create();
-            window = factory.get();
-            // Auto-center unless the factory positioned the window explicitly.
-            if (autoCenter) {
-                int[] sz = fbSize();
-                window.x = (sz[0] / scale - window.width)  / 2;
-                window.y = (sz[1] / scale - window.height) / 2;
-            }
-        }
-
+        prepareGlfwThreadCheck();
         int[] sz = fbSize();
+        ensureWindow(sz[0], sz[1], scale < 1 ? Utils.detectScale(glfwWin) : scale, true);
         int vW = sz[0] / scale, vH = sz[1] / scale;
 
         renderOverlay(sz[0], sz[1], vW, vH);
@@ -122,9 +146,84 @@ public final class Session implements Runnable {
         }
     }
 
+    /**
+     * Render-only variant for hosts where touching {@code org.lwjgl.glfw.GLFW}
+     * from the render thread is unsafe (Project Zomboid on macOS).
+     *
+     * <p>The caller supplies framebuffer dimensions and UI scale. This method
+     * intentionally skips cursor creation, mouse polling, and window-close
+     * polling.
+     */
+    public void runRenderOnly(int fbW, int fbH, int uiScale) {
+        if (isDone()) return;
+
+        ensureWindow(fbW, fbH, Math.max(1, uiScale), false);
+        renderOverlay(fbW, fbH, fbW / scale, fbH / scale);
+    }
+
+    /**
+     * Render-only variant with host-provided mouse input.
+     *
+     * <p>{@code mouseX/mouseY} are logical viewport coordinates, not framebuffer
+     * pixels. The host is responsible for polling input without touching
+     * {@code org.lwjgl.glfw.GLFW}.
+     */
+    public int runRenderOnlyWithHostInput(int fbW, int fbH, int uiScale,
+            int mouseX, int mouseY, boolean leftDown) {
+        if (isDone()) {
+            return Window.HOST_CURSOR_DEFAULT;
+        }
+
+        ensureWindow(fbW, fbH, Math.max(1, uiScale), false);
+        int vW = fbW / scale;
+        int vH = fbH / scale;
+
+        int action = leftDown && !prevLeft ? GLFW.GLFW_PRESS
+                : (!leftDown && prevLeft ? GLFW.GLFW_RELEASE : -1);
+        if (action != -1) {
+            window.handleHostMouseButton(action, mouseX, mouseY);
+        }
+        int cursor = window.handleHostCursorPos(mouseX, mouseY, vW, vH, leftDown);
+        prevLeft = leftDown;
+        renderOverlay(fbW, fbH, vW, vH);
+        return cursor;
+    }
+
     // -------------------------------------------------------------------------
     // Private
     // -------------------------------------------------------------------------
+
+    private void ensureWindow(int fbW, int fbH, int uiScale, boolean initCursors) {
+        if (scale < 1) {
+            scale = Math.max(1, uiScale);
+        }
+        if (window != null) {
+            return;
+        }
+
+        if (initCursors) {
+            CursorMgr.init();
+        }
+        window = factory.get();
+        if (autoCenter) {
+            window.setPosition(
+                    (fbW / scale - window.width)  / 2,
+                    (fbH / scale - window.height) / 2);
+        }
+    }
+
+    private static void prepareGlfwThreadCheck() {
+        // LWJGL3's GLFW static initializer checks whether the calling thread is
+        // the macOS main thread (Thread 0) and calls jni_FatalError if not.
+        // PZ uses lwjglx (an LWJGL2 shim) which bypasses org.lwjgl.glfw.GLFW, so
+        // this class may be the first to touch GLFW from the GL/game thread.
+        //
+        // We cannot use Configuration.GLFW_CHECK_THREAD0.set(false) here because
+        // accessing org.lwjgl.system.Configuration itself may trigger liblwjgl.dylib
+        // class initialization which performs the same thread check. Setting the
+        // system property is safe and is read lazily by Configuration.get().
+        System.setProperty("org.lwjgl.glfw.checkThread0", "false");
+    }
 
     private void renderOverlay(int fbW, int fbH, int vW, int vH) {
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);

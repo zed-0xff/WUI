@@ -13,6 +13,14 @@ import java.util.List;
  * Coordinates match {@link TestApp}: origin top-left, y downward (framebuffer pixels).
  */
 public class Window extends Element {
+    public static final int HOST_CURSOR_DEFAULT = 0;
+    public static final int HOST_CURSOR_ARROW = 1;
+    public static final int HOST_CURSOR_HAND = 2;
+    public static final int HOST_CURSOR_RESIZE_H = 3;
+    public static final int HOST_CURSOR_RESIZE_V = 4;
+    public static final int HOST_CURSOR_RESIZE_NWSE = 5;
+    public static final int HOST_CURSOR_RESIZE_NESW = 6;
+
     Color bgColor = Color.WHITE;
     String title, status;
     protected final List<Control> controls = new ArrayList<>();
@@ -115,30 +123,76 @@ public class Window extends Element {
         }
     }
 
+    private boolean startDragOrResize(int mx, int my) {
+        ResizeGrip g = hitTestResize(mx, my);
+        if (g != ResizeGrip.NONE) {
+            activeResize = g;
+            resizeSnapX = x; resizeSnapY = y;
+            resizeSnapW = width; resizeSnapH = height;
+            return true;
+        }
+        if (titleDragZone(mx, my)) {
+            dragging = true;
+            dragGrabDx = mx - x;
+            dragGrabDy = my - y;
+            return true;
+        }
+        return false;
+    }
+
+    private void stopDragOrResize() {
+        dragging = false;
+        activeResize = ResizeGrip.NONE;
+    }
+
     private void updateHoverCursor(long window, int mx, int my) {
         ResizeGrip g = hitTestResize(mx, my);
         if (g != ResizeGrip.NONE) {
             CursorMgr.set(window, cursorForGrip(g));
         } else if (contains(mx, my)) {
-            long cur = 0;
-            Rect contentRect = getContentRect();
-            if (!controls.isEmpty() && !contentRect.isEmpty()) {
-                int cx = mx - contentRect.x(), cy = my - contentRect.y();
-                for (Control c : controls) {
-                    if (!c.visible) {
-                        continue;
-                    }
-                    long cc = c.cursorAt(cx, cy);
-                    if (cc != 0) { cur = cc; break; }
-                }
-            }
-            CursorMgr.set(window, cur);
+            CursorMgr.set(window, controlCursorAt(mx, my));
         } else {
             CursorMgr.setDefault(window);
         }
     }
 
-    private void applyResize(long window, int mx, int my, int viewW, int viewH) {
+    private long controlCursorAt(int mx, int my) {
+        Rect contentRect = getContentRect();
+        if (controls.isEmpty() || contentRect.isEmpty()) {
+            return 0;
+        }
+        int cx = mx - contentRect.x(), cy = my - contentRect.y();
+        for (Control c : controls) {
+            if (!c.visible) {
+                continue;
+            }
+            long cc = c.cursorAt(cx, cy);
+            if (cc != 0) {
+                return cc;
+            }
+        }
+        return 0;
+    }
+
+    private int hostControlCursorAt(int mx, int my) {
+        Rect contentRect = getContentRect();
+        if (controls.isEmpty() || contentRect.isEmpty()) {
+            return HOST_CURSOR_DEFAULT;
+        }
+        int cx = mx - contentRect.x(), cy = my - contentRect.y();
+        for (Control c : controls) {
+            if (!c.visible) {
+                continue;
+            }
+            int cursor = c.hostCursorAt(cx, cy);
+            if (cursor != HOST_CURSOR_DEFAULT) {
+                return cursor;
+            }
+        }
+        return HOST_CURSOR_DEFAULT;
+    }
+
+    private void applyResize(int mx, int my, int viewW, int viewH) {
         int sx = resizeSnapX;
         int sy = resizeSnapY;
         int sw = resizeSnapW;
@@ -158,7 +212,30 @@ public class Window extends Element {
             default: break;
         }
         clampResizeInView(viewW, viewH);
-        CursorMgr.set(window, cursorForGrip(activeResize));
+    }
+
+    private void dispatchMouseButtonToControls(int action, int mx, int my) {
+        Rect contentRect = getContentRect();
+        if (controls.isEmpty() || contentRect.isEmpty()) {
+            return;
+        }
+
+        int rx = mx - contentRect.x();
+        int ry = my - contentRect.y();
+        if (action == GLFW.GLFW_PRESS) {
+            for (Control c : controls) {
+                if (c.visible && c.isActiveAt(rx, ry)) {
+                    c.handleMouseButton(action, rx, ry);
+                    break;
+                }
+            }
+        } else {
+            for (Control c : controls) {
+                if (c.visible) {
+                    c.handleMouseButton(action, rx, ry);
+                }
+            }
+        }
     }
 
     /**
@@ -169,38 +246,77 @@ public class Window extends Element {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
 
         if (action == GLFW.GLFW_PRESS) {
-            ResizeGrip g = hitTestResize(mx, my);
-            if (g != ResizeGrip.NONE) {
-                activeResize = g;
-                resizeSnapX = x; resizeSnapY = y;
-                resizeSnapW = width; resizeSnapH = height;
-                return true;
-            }
-            if (titleDragZone(mx, my)) {
-                dragging = true;
-                dragGrabDx = mx - x;
-                dragGrabDy = my - y;
+            if (startDragOrResize(mx, my)) {
                 return true;
             }
         }
         if (action == GLFW.GLFW_RELEASE) {
-            dragging = false;
-            activeResize = ResizeGrip.NONE;
+            stopDragOrResize();
             updateHoverCursor(window, mx, my);
         }
-        // Forward press/release to child controls (content-relative coords).
-        Rect contentRect = getContentRect();
-        if (!controls.isEmpty() && !contentRect.isEmpty()) {
-            int rx = mx - contentRect.x(), ry = my - contentRect.y();
-            if (action == GLFW.GLFW_PRESS) {
-                for (Control c : controls) {
-                    if (c.visible && c.isActiveAt(rx, ry)) { c.handleMouseButton(action, rx, ry); break; }
-                }
-            } else {
-                for (Control c : controls) if (c.visible) c.handleMouseButton(action, rx, ry);
+        dispatchMouseButtonToControls(action, mx, my);
+        return false;
+    }
+
+    /**
+     * Host-provided mouse button event for embedded renderers that cannot safely
+     * call GLFW (for example Project Zomboid on macOS). Coordinates are in the
+     * same logical viewport space as {@link #render(int)}.
+     */
+    public void handleHostMouseButton(int action, int mx, int my) {
+        if (action == GLFW.GLFW_PRESS) {
+            if (startDragOrResize(mx, my)) {
+                return;
             }
         }
-        return false;
+        if (action == GLFW.GLFW_RELEASE) {
+            stopDragOrResize();
+        }
+
+        dispatchMouseButtonToControls(action, mx, my);
+    }
+
+    /**
+     * Host-provided cursor update for embedded renderers that cannot safely call
+     * GLFW from WUI. Returns one of {@code HOST_CURSOR_*}.
+     */
+    public int handleHostCursorPos(int mx, int my, int viewW, int viewH, boolean leftDown) {
+        if (activeResize != ResizeGrip.NONE && leftDown) {
+            applyResize(mx, my, viewW, viewH);
+            return hostCursorForGrip(activeResize);
+        }
+        if (dragging && leftDown) {
+            x = mx - dragGrabDx;
+            y = my - dragGrabDy;
+            clampPositionInView(viewW, viewH);
+            return HOST_CURSOR_HAND;
+        }
+
+        ResizeGrip g = hitTestResize(mx, my);
+        if (g != ResizeGrip.NONE) {
+            return hostCursorForGrip(g);
+        }
+        if (titleDragZone(mx, my)) {
+            return HOST_CURSOR_ARROW;
+        }
+        if (contains(mx, my)) {
+            int cursor = hostControlCursorAt(mx, my);
+            if (cursor != HOST_CURSOR_DEFAULT) {
+                return cursor;
+            }
+            return HOST_CURSOR_ARROW;
+        }
+        return HOST_CURSOR_DEFAULT;
+    }
+
+    private static int hostCursorForGrip(ResizeGrip g) {
+        switch (g) {
+            case N: case S: return HOST_CURSOR_RESIZE_V;
+            case E: case W: return HOST_CURSOR_RESIZE_H;
+            case NW: case SE: return HOST_CURSOR_RESIZE_NWSE;
+            case NE: case SW: return HOST_CURSOR_RESIZE_NESW;
+            default: return HOST_CURSOR_ARROW;
+        }
     }
 
     /** @param viewW,viewH logical viewport size (matches ortho after UI scale). */
@@ -208,7 +324,8 @@ public class Window extends Element {
         boolean leftDown = GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
 
         if (activeResize != ResizeGrip.NONE && leftDown) {
-            applyResize(window, mx, my, viewW, viewH);
+            applyResize(mx, my, viewW, viewH);
+            CursorMgr.set(window, cursorForGrip(activeResize));
             return;
         }
         if (dragging && leftDown) {
@@ -249,6 +366,29 @@ public class Window extends Element {
         }
     }
 
+    protected void renderControlsClipped(int scale) {
+        Rect contentRect = getContentRect();
+        if (controls.isEmpty() || contentRect.isEmpty()) {
+            return;
+        }
+
+        IntBuffer vp = BufferUtils.createIntBuffer(4);
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, vp);
+        int fbH = vp.get(3);
+
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        GL11.glScissor(
+            contentRect.x() * scale,
+            fbH - (contentRect.y() + contentRect.h()) * scale,
+            contentRect.w() * scale,
+            contentRect.h() * scale
+        );
+        for (Control c : controls) {
+            if (c.visible) c.render(contentRect.x(), contentRect.y());
+        }
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+    }
+
     /**
      * Render using an explicit logical-to-framebuffer pixel {@code scale}.
      * Pass 1 for a 1:1 mapping; pass {@link Utils#detectScale} for HiDPI-aware rendering.
@@ -265,23 +405,6 @@ public class Window extends Element {
         });
 
         // Render child controls clipped to the content rect.
-        Rect contentRect = getContentRect();
-        if (!controls.isEmpty() && !contentRect.isEmpty()) {
-            IntBuffer vp = BufferUtils.createIntBuffer(4);
-            GL11.glGetIntegerv(GL11.GL_VIEWPORT, vp);
-            int fbH = vp.get(3);
-
-            GL11.glEnable(GL11.GL_SCISSOR_TEST);
-            GL11.glScissor(
-                contentRect.x() * scale,
-                fbH - (contentRect.y() + contentRect.h()) * scale,
-                contentRect.w() * scale,
-                contentRect.h() * scale
-            );
-            for (Control c : controls) {
-                if (c.visible) c.render(contentRect.x(), contentRect.y());
-            }
-            GL11.glDisable(GL11.GL_SCISSOR_TEST);
-        }
+        renderControlsClipped(scale);
     }
 }
