@@ -39,7 +39,7 @@ public abstract class Element {
         if (border == null || border.size < 1) {
             return;
         }
-        outlineRect(x, y, w, h, border.size, ControlStyle.parseColor(border.color, Color.BLACK));
+        outlineRect(x, y, w, h, border.size, border.color != null ? border.color : Color.BLACK);
     }
 
     static void glColor(Color c) { c.applyGl(); }

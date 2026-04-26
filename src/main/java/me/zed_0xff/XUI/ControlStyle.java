@@ -10,6 +10,12 @@ import java.util.Map;
 
 /** Parsed control visuals from the active theme. */
 final class ControlStyle {
+    static final int VISUAL_SELECTED = 1;
+    static final int VISUAL_PRESSED = 1 << 1;
+    static final int VISUAL_HOVERED = 1 << 2;
+
+    private static final Gson THEME_GSON = Color.gson();
+
     private static String themeName;
     private static Theme theme;
     private static final Map<String, Atlas> atlases = new HashMap<>();
@@ -47,17 +53,21 @@ final class ControlStyle {
 
     static Color bgColor(String controlName, Color fallback) {
         Control control = control(controlName);
-        return control != null ? parseColor(control.bgcolor, fallback) : fallback;
+        return control != null && control.bgcolor != null ? control.bgcolor : fallback;
     }
 
     static Color fgColor(String controlName, Color fallback) {
         Control control = control(controlName);
-        return control != null ? parseColor(control.fgcolor, fallback) : fallback;
+        return control != null && control.fgcolor != null ? control.fgcolor : fallback;
     }
 
     static Border border(String controlName) {
         Control control = control(controlName);
         return control != null ? control.border : null;
+    }
+
+    static Color bgColor(State state) {
+        return state != null ? state.bgcolor : null;
     }
 
     static Atlas atlasFor(State state) {
@@ -107,7 +117,7 @@ final class ControlStyle {
         return "/fonts/" + resourceName;
     }
 
-    static List<State> visualStates(String controlName, boolean selected, boolean pressed) {
+    static List<State> visualStates(String controlName, int flags) {
         Control control = control(controlName);
         if (control == null) {
             return List.of();
@@ -118,10 +128,13 @@ final class ControlStyle {
         if (base != null) {
             states.add(base);
         }
-        if (selected) {
+        if ((flags & VISUAL_HOVERED) != 0) {
+            applyActiveState(control, states, "hovered");
+        }
+        if ((flags & VISUAL_SELECTED) != 0) {
             applyActiveState(control, states, "selected");
         }
-        if (pressed) {
+        if ((flags & VISUAL_PRESSED) != 0) {
             applyActiveState(control, states, "pressed");
         }
 
@@ -130,7 +143,7 @@ final class ControlStyle {
 
     private static Theme loadTheme(String name) {
         String path = themeDir(name) + "/theme.json";
-        Theme theme = Utils.readJson(path, new Gson(), Theme.class);
+        Theme theme = Utils.readJson(path, THEME_GSON, Theme.class);
         return java.util.Objects.requireNonNull(theme, "failed reading " + path + " from classpath");
     }
 
@@ -200,20 +213,6 @@ final class ControlStyle {
         return out;
     }
 
-    static Color parseColor(String color, Color fallback) {
-        if (color == null || color.isEmpty()) {
-            return fallback;
-        }
-        try {
-            if (color.charAt(0) == '#') {
-                return new Color(Integer.parseInt(color.substring(1), 16));
-            }
-            return new Color(Integer.parseInt(color, 16));
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
-    }
-
     private static State resolveState(Control control, String stateName) {
         if (control == null) {
             return null;
@@ -256,6 +255,7 @@ final class ControlStyle {
         }
         State out = copyState(parent);
         if (child.type != null) out.type = child.type;
+        if (child.bgcolor != null) out.bgcolor = child.bgcolor;
         out.image = mergeImage(out.image, child.image);
         if (child.rect != null) out.rect = child.rect;
         if (child.hotspot != null) out.hotspot = child.hotspot;
@@ -271,6 +271,7 @@ final class ControlStyle {
         }
         out.extendsName = in.extendsName;
         out.type = in.type;
+        out.bgcolor = in.bgcolor;
         out.image = in.image;
         out.patch = in.patch;
         out.rect = in.rect;
@@ -302,8 +303,8 @@ final class ControlStyle {
 
     static final class Control {
         String type;
-        String bgcolor;
-        String fgcolor;
+        Color bgcolor;
+        Color fgcolor;
         Border border;
         ImageSpec image;
         Patch patch;
@@ -317,6 +318,7 @@ final class ControlStyle {
         @com.google.gson.annotations.SerializedName("extends")
         String extendsName;
         String type;
+        Color bgcolor;
         ImageSpec image;
         Patch patch;
         RectSpec rect;
@@ -327,7 +329,7 @@ final class ControlStyle {
 
     static final class Border {
         int size;
-        String color;
+        Color color;
     }
 
     static final class ImageSpec {
@@ -336,6 +338,7 @@ final class ControlStyle {
         int width;
         @SerializedName(value = "h", alternate = "height")
         int height;
+        boolean scale;
     }
 
     static final class Patch {
@@ -399,6 +402,6 @@ final class ControlStyle {
     static final class Text {
         String align;
         String valign;
-        String color;
+        Color color;
     }
 }

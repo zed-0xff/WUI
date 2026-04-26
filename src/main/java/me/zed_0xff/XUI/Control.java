@@ -3,6 +3,7 @@ package me.zed_0xff.XUI;
 public abstract class Control extends Element {
     public boolean enabled = true;
     public boolean visible = true;
+    boolean hovered;
     final Window window;
 
     public Control(Window window, int x, int y, int w, int h){

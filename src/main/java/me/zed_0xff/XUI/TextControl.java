@@ -143,7 +143,7 @@ public abstract class TextControl extends Control {
     }
 
     static Color styledTextColor(ControlStyle.Area area, Color fallback) {
-        String color = area != null && area.text != null ? area.text.color : null;
-        return ControlStyle.parseColor(color, fallback);
+        Color color = area != null && area.text != null ? area.text.color : null;
+        return color != null ? color : fallback;
     }
 }

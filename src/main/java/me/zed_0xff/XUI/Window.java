@@ -159,10 +159,12 @@ public class Window extends Element {
     private void updateHoverCursor(long window, int mx, int my) {
         ResizeGrip g = hitTestResize(mx, my);
         if (g != ResizeGrip.NONE) {
+            clearControlHover();
             CursorMgr.set(window, cursorForGrip(g));
         } else if (contains(mx, my)) {
             CursorMgr.set(window, controlCursorAt(mx, my));
         } else {
+            clearControlHover();
             CursorMgr.setDefault(window);
         }
     }
@@ -170,37 +172,41 @@ public class Window extends Element {
     private long controlCursorAt(int mx, int my) {
         Rect contentRect = getContentRect();
         if (controls.isEmpty() || contentRect.isEmpty()) {
+            clearControlHover();
             return 0;
         }
         int cx = mx - contentRect.x(), cy = my - contentRect.y();
+        long cursor = 0;
         for (Control c : controls) {
-            if (!c.visible) {
-                continue;
-            }
-            long cc = c.cursorAt(cx, cy);
-            if (cc != 0) {
-                return cc;
+            c.hovered = c.visible && c.enabled && c.isActiveAt(cx, cy);
+            if (cursor == 0 && c.hovered) {
+                cursor = c.cursorAt(cx, cy);
             }
         }
-        return 0;
+        return cursor;
     }
 
     private int hostControlCursorAt(int mx, int my) {
         Rect contentRect = getContentRect();
         if (controls.isEmpty() || contentRect.isEmpty()) {
+            clearControlHover();
             return HOST_CURSOR_DEFAULT;
         }
         int cx = mx - contentRect.x(), cy = my - contentRect.y();
+        int result = HOST_CURSOR_DEFAULT;
         for (Control c : controls) {
-            if (!c.visible) {
-                continue;
-            }
-            int cursor = c.hostCursorAt(cx, cy);
-            if (cursor != HOST_CURSOR_DEFAULT) {
-                return cursor;
+            c.hovered = c.visible && c.enabled && c.isActiveAt(cx, cy);
+            if (result == HOST_CURSOR_DEFAULT && c.hovered) {
+                result = c.hostCursorAt(cx, cy);
             }
         }
-        return HOST_CURSOR_DEFAULT;
+        return result;
+    }
+
+    private void clearControlHover() {
+        for (Control c : controls) {
+            c.hovered = false;
+        }
     }
 
     private void applyResize(int mx, int my, int viewW, int viewH) {
@@ -293,10 +299,12 @@ public class Window extends Element {
      */
     public int handleHostCursorPos(int mx, int my, int viewW, int viewH, boolean leftDown) {
         if (activeResize != ResizeGrip.NONE && leftDown) {
+            clearControlHover();
             applyResize(mx, my, viewW, viewH);
             return hostCursorForGrip(activeResize);
         }
         if (dragging && leftDown) {
+            clearControlHover();
             x = mx - dragGrabDx;
             y = my - dragGrabDy;
             clampPositionInView(viewW, viewH);
@@ -305,9 +313,11 @@ public class Window extends Element {
 
         ResizeGrip g = hitTestResize(mx, my);
         if (g != ResizeGrip.NONE) {
+            clearControlHover();
             return hostCursorForGrip(g);
         }
         if (titleDragZone(mx, my)) {
+            clearControlHover();
             return HOST_CURSOR_ARROW;
         }
         if (contains(mx, my)) {
@@ -317,6 +327,7 @@ public class Window extends Element {
             }
             return HOST_CURSOR_ARROW;
         }
+        clearControlHover();
         return HOST_CURSOR_DEFAULT;
     }
 
@@ -335,11 +346,13 @@ public class Window extends Element {
         boolean leftDown = GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
 
         if (activeResize != ResizeGrip.NONE && leftDown) {
+            clearControlHover();
             applyResize(mx, my, viewW, viewH);
             CursorMgr.set(window, cursorForGrip(activeResize));
             return;
         }
         if (dragging && leftDown) {
+            clearControlHover();
             x = mx - dragGrabDx;
             y = my - dragGrabDy;
             clampPositionInView(viewW, viewH);

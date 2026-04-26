@@ -39,7 +39,9 @@ public abstract class ButtonBase extends TextControl {
     protected abstract String styleName();
 
     protected Iterable<ControlStyle.State> visualStates() {
-        return ControlStyle.visualStates(styleName(), false, pressed);
+        int flags = (hovered ? ControlStyle.VISUAL_HOVERED : 0)
+                | (pressed ? ControlStyle.VISUAL_PRESSED : 0);
+        return ControlStyle.visualStates(styleName(), flags);
     }
 
     @Override
@@ -67,6 +69,11 @@ public abstract class ButtonBase extends TextControl {
                 decor.render(bx, by, width, height, fill);
             } else if ("image".equals(state.type) && state.rect != null) {
                 renderImageState(state, bx, by);
+            } else {
+                Color bg = ControlStyle.bgColor(state);
+                if (bg != null) {
+                    fillRect(bx, by, width, height, bg);
+                }
             }
         }
     }

@@ -12,7 +12,10 @@ public abstract class ToggleBase extends ButtonBase {
 
     @Override
     protected Iterable<ControlStyle.State> visualStates() {
-        return ControlStyle.visualStates(styleName(), checked, pressed);
+        int flags = (checked ? ControlStyle.VISUAL_SELECTED : 0)
+                  | (hovered ? ControlStyle.VISUAL_HOVERED : 0)
+                  | (pressed ? ControlStyle.VISUAL_PRESSED : 0);
+        return ControlStyle.visualStates(styleName(), flags);
     }
 
     @Override
@@ -27,5 +30,4 @@ public abstract class ToggleBase extends ButtonBase {
         ControlStyle.Area label = getArea("label");
         return label != null && label.hasX() ? label.x(0) : height + 2;
     }
-
 }
