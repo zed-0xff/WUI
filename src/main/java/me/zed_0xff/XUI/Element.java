@@ -34,6 +34,14 @@ public abstract class Element {
         return ControlStyle.area(styleName(), name);
     }
 
+    protected void renderBorder(int x, int y, int w, int h) {
+        ControlStyle.Border border = ControlStyle.border(styleName());
+        if (border == null || border.size < 1) {
+            return;
+        }
+        outlineRect(x, y, w, h, border.size, ControlStyle.parseColor(border.color, Color.BLACK));
+    }
+
     static void glColor(Color c) { c.applyGl(); }
 
     static void fillRect(int x0, int y0, int w, int h, Color color) {

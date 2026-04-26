@@ -13,6 +13,7 @@ public abstract class TextControl extends Control {
     public TextControl(Window window, int x, int y, int w, int h, String text) {
         super(window, x, y, w, h);
         this.text = text;
+        this.textColor = ControlStyle.fgColor(styleName(), Color.BLACK);
     }
 
     public void setText(String text) {
@@ -143,16 +144,6 @@ public abstract class TextControl extends Control {
 
     static Color styledTextColor(ControlStyle.Area area, Color fallback) {
         String color = area != null && area.text != null ? area.text.color : null;
-        if (color == null || color.isEmpty()) {
-            return fallback;
-        }
-        try {
-            if (color.charAt(0) == '#') {
-                return new Color(Integer.parseInt(color.substring(1), 16));
-            }
-            return new Color(Integer.parseInt(color, 16));
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
+        return ControlStyle.parseColor(color, fallback);
     }
 }

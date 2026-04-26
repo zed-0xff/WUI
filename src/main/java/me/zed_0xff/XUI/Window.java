@@ -21,7 +21,7 @@ public class Window extends Element {
     public static final int HOST_CURSOR_RESIZE_NWSE = 5;
     public static final int HOST_CURSOR_RESIZE_NESW = 6;
 
-    Color bgColor = Color.WHITE;
+    Color bgColor;
     String title, status;
     protected final List<Control> controls = new ArrayList<>();
 
@@ -47,6 +47,7 @@ public class Window extends Element {
     public Window(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
         this.title = title;
+        this.bgColor = ControlStyle.bgColor(styleName(), Color.WHITE);
     }
 
     public Window addControl(java.util.function.Function<Window, Control> factory) {
@@ -403,6 +404,7 @@ public class Window extends Element {
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
         _deco.render(x, y, width, height, bgColor);
+        renderBorder(x, y, width, height);
 
         Font f = font();
         withTexture(f.fontTex, () -> {
@@ -427,7 +429,7 @@ public class Window extends Element {
         if (s == null || s.isEmpty() || area == null) {
             return;
         }
-        glColor(TextControl.styledTextColor(area, Color.BLACK));
+        glColor(TextControl.styledTextColor(area, ControlStyle.fgColor(styleName(), Color.BLACK)));
         TextControl.drawAlignedString(f, x, y, width, height, area, s);
     }
 }

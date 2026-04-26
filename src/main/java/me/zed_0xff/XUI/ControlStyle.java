@@ -45,6 +45,21 @@ final class ControlStyle {
         return control != null && control.areas != null ? control.areas.get(areaName) : null;
     }
 
+    static Color bgColor(String controlName, Color fallback) {
+        Control control = control(controlName);
+        return control != null ? parseColor(control.bgcolor, fallback) : fallback;
+    }
+
+    static Color fgColor(String controlName, Color fallback) {
+        Control control = control(controlName);
+        return control != null ? parseColor(control.fgcolor, fallback) : fallback;
+    }
+
+    static Border border(String controlName) {
+        Control control = control(controlName);
+        return control != null ? control.border : null;
+    }
+
     static Atlas atlasFor(State state) {
         if (state == null || state.image == null || state.image.name == null
                 || state.image.width < 1 || state.image.height < 1) {
@@ -116,10 +131,7 @@ final class ControlStyle {
     private static Theme loadTheme(String name) {
         String path = themeDir(name) + "/theme.json";
         Theme theme = Utils.readJson(path, new Gson(), Theme.class);
-        if (java.util.Objects.isNull(theme)) {
-            throw new IllegalStateException("failed reading " + path + " from classpath");
-        }
-        return theme;
+        return java.util.Objects.requireNonNull(theme, "failed reading " + path + " from classpath");
     }
 
     private static String themeResource(String resourceName) {
@@ -170,6 +182,9 @@ final class ControlStyle {
         }
         Control out = new Control();
         out.type = child.type != null ? child.type : parent.type;
+        out.bgcolor = child.bgcolor != null ? child.bgcolor : parent.bgcolor;
+        out.fgcolor = child.fgcolor != null ? child.fgcolor : parent.fgcolor;
+        out.border = child.border != null ? child.border : parent.border;
         out.image = mergeImage(parent.image, child.image);
         out.patch = child.patch != null ? child.patch : parent.patch;
         out.areas = parent.areas != null ? new HashMap<>(parent.areas) : null;
@@ -183,6 +198,20 @@ final class ControlStyle {
             out.states.putAll(child.states);
         }
         return out;
+    }
+
+    static Color parseColor(String color, Color fallback) {
+        if (color == null || color.isEmpty()) {
+            return fallback;
+        }
+        try {
+            if (color.charAt(0) == '#') {
+                return new Color(Integer.parseInt(color.substring(1), 16));
+            }
+            return new Color(Integer.parseInt(color, 16));
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 
     private static State resolveState(Control control, String stateName) {
@@ -273,6 +302,9 @@ final class ControlStyle {
 
     static final class Control {
         String type;
+        String bgcolor;
+        String fgcolor;
+        Border border;
         ImageSpec image;
         Patch patch;
         Map<String, Area> areas;
@@ -291,6 +323,11 @@ final class ControlStyle {
         Point hotspot;
         String tint;
         boolean modifier;
+    }
+
+    static final class Border {
+        int size;
+        String color;
     }
 
     static final class ImageSpec {

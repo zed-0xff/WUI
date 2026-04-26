@@ -46,6 +46,7 @@ public abstract class ButtonBase extends TextControl {
     public void render(int originX, int originY) {
         int bx = originX + x, by = originY + y;
         renderStates(styleName(), visualStates(), bx, by, null);
+        renderBorder(bx, by, width, height);
         if (text != null && !text.isEmpty()) {
             ControlStyle.Area label = getArea("label");
             Font f = font();
