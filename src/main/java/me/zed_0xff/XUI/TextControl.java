@@ -23,8 +23,8 @@ public abstract class TextControl extends Control {
         this.textColor = textColor;
     }
 
-    protected static ControlStyle.Area styledArea(String controlName, String areaName) {
-        return ControlStyle.area(controlName, areaName);
+    protected String styleName() {
+        return "label";
     }
 
     protected void drawAlignedText(Font f, int boxX, int boxY, int boxW, int boxH, ControlStyle.Area area) {

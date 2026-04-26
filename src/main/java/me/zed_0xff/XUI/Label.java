@@ -9,7 +9,7 @@ public class Label extends TextControl {
     public void render(int originX, int originY) {
         if (text == null || text.isEmpty()) return;
         int tx = originX + x, ty = originY + y;
-        ControlStyle.Area label = styledArea("label", "label");
+        ControlStyle.Area label = getArea("label");
         Font f = font();
         withTexture(f.fontTex, () -> {
             glColor(styledTextColor(label, textColor));

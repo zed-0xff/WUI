@@ -47,7 +47,7 @@ public abstract class ButtonBase extends TextControl {
         int bx = originX + x, by = originY + y;
         renderStates(styleName(), visualStates(), bx, by, null);
         if (text != null && !text.isEmpty()) {
-            ControlStyle.Area label = styledArea(styleName(), "label");
+            ControlStyle.Area label = getArea("label");
             Font f = font();
             withTexture(f.fontTex, () -> {
                 glColor(styledTextColor(label, textColor));

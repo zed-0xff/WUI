@@ -13,11 +13,11 @@ import java.util.List;
  * Coordinates match {@link TestApp}: origin top-left, y downward (framebuffer pixels).
  */
 public class Window extends Element {
-    public static final int HOST_CURSOR_DEFAULT = 0;
-    public static final int HOST_CURSOR_ARROW = 1;
-    public static final int HOST_CURSOR_HAND = 2;
-    public static final int HOST_CURSOR_RESIZE_H = 3;
-    public static final int HOST_CURSOR_RESIZE_V = 4;
+    public static final int HOST_CURSOR_DEFAULT     = 0;
+    public static final int HOST_CURSOR_ARROW       = 1;
+    public static final int HOST_CURSOR_HAND        = 2;
+    public static final int HOST_CURSOR_RESIZE_H    = 3;
+    public static final int HOST_CURSOR_RESIZE_V    = 4;
     public static final int HOST_CURSOR_RESIZE_NWSE = 5;
     public static final int HOST_CURSOR_RESIZE_NESW = 6;
 
@@ -31,11 +31,8 @@ public class Window extends Element {
     static final int EDGE  = 6;
     static final int MIN_W = 120;
     static final int MIN_H = 80;
-    static final int titleBarHeight = 23; // equal to top*.height in window.json
 
-    private enum ResizeGrip {
-        NONE, N, S, E, W, NE, NW, SE, SW
-    }
+    private enum ResizeGrip { NONE, N, S, E, W, NE, NW, SE, SW }
 
     boolean dragging;
     int dragGrabDx;
@@ -75,7 +72,13 @@ public class Window extends Element {
     }
 
     public boolean containsTitleBar(int mx, int my) {
-        return titleRect().contains(mx, my);
+        Rect r = titleRect();
+        return (r != null) ? r.contains(mx, my) : false;
+    }
+
+    @Override
+    protected String styleName() {
+        return "window";
     }
 
     /** Title strip excluding edge grips so resize takes priority on corners/top border. */
@@ -83,18 +86,19 @@ public class Window extends Element {
         if (!containsTitleBar(mx, my)) {
             return false;
         }
-        Rect title = titleRect();
+        Rect r = titleRect();
+        if (r == null) {
+            return false;
+        }
         if (mx < x + GRIP || mx >= x + width - GRIP) {
             return false;
         }
-        return my >= title.y() + EDGE;
+        return my >= r.y() + EDGE;
     }
 
     private Rect titleRect() {
-        ControlStyle.Area title = ControlStyle.area("window", "title");
-        return title != null
-                ? TextControl.resolveAreaRect(x, y, width, height, title)
-                : new Rect(x, y, width, titleBarHeight);
+        ControlStyle.Area title = getArea("title");
+        return title != null ? TextControl.resolveAreaRect(x, y, width, height, title) : null;
     }
 
     private ResizeGrip hitTestResize(int mx, int my) {
@@ -121,8 +125,8 @@ public class Window extends Element {
 
     private static long cursorForGrip(ResizeGrip g) {
         switch (g) {
-            case N: case S: return CursorMgr.resizeV();
-            case E: case W: return CursorMgr.resizeH();
+            case N:  case S:  return CursorMgr.resizeV();
+            case E:  case W:  return CursorMgr.resizeH();
             case NW: case SE: return CursorMgr.curNWSE();
             case NE: case SW: return CursorMgr.curNESW();
             default: return CursorMgr.arrow();
@@ -317,8 +321,8 @@ public class Window extends Element {
 
     private static int hostCursorForGrip(ResizeGrip g) {
         switch (g) {
-            case N: case S: return HOST_CURSOR_RESIZE_V;
-            case E: case W: return HOST_CURSOR_RESIZE_H;
+            case N:  case S:  return HOST_CURSOR_RESIZE_V;
+            case E:  case W:  return HOST_CURSOR_RESIZE_H;
             case NW: case SE: return HOST_CURSOR_RESIZE_NWSE;
             case NE: case SW: return HOST_CURSOR_RESIZE_NESW;
             default: return HOST_CURSOR_ARROW;
@@ -365,7 +369,7 @@ public class Window extends Element {
     }
 
     public Rect getContentRect() {
-        ControlStyle.Area content = ControlStyle.area("window", "content");
+        ControlStyle.Area content = getArea("content");
         return content != null
                 ? TextControl.resolveAreaRect(x, y, width, height, content)
                 : _deco.contentRect(x, y, width, height);
@@ -402,8 +406,8 @@ public class Window extends Element {
 
         Font f = font();
         withTexture(f.fontTex, () -> {
-            drawWindowText(f, title, ControlStyle.area("window", "title"));
-            drawWindowText(f, status, ControlStyle.area("window", "status"));
+            drawWindowText(f, title,  getArea("title"));
+            drawWindowText(f, status, getArea("status"));
         });
 
         // Render child controls clipped to the content rect.

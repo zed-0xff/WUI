@@ -24,7 +24,7 @@ public abstract class ToggleBase extends ButtonBase {
     }
 
     private int labelX() {
-        ControlStyle.Area label = ControlStyle.area(styleName(), "label");
+        ControlStyle.Area label = getArea("label");
         return label != null && label.hasX() ? label.x(0) : height + 2;
     }
 

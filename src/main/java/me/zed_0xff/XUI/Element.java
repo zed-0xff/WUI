@@ -26,6 +26,14 @@ public abstract class Element {
         this.x = x; this.y = y; this.width = w; this.height = h;
     }
 
+    protected String styleName() {
+        return getClass().getSimpleName().toLowerCase();
+    }
+
+    protected ControlStyle.Area getArea(String name) {
+        return ControlStyle.area(styleName(), name);
+    }
+
     static void glColor(Color c) { c.applyGl(); }
 
     static void fillRect(int x0, int y0, int w, int h, Color color) {
