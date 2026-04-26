@@ -16,9 +16,10 @@ public class Button extends ButtonBase {
         ElementDecor deco = (pressed && _pressedDeco.isLoaded()) ? _pressedDeco : _normalDeco;
         deco.render(bx, by, width, height, bgColor);
         if (text != null && !text.isEmpty()) {
-            withTexture(font.fontTex, () -> {
+            Font f = font();
+            withTexture(f.fontTex, () -> {
                 glColor(textColor);
-                font.drawTextCentered(bx, by + deco.textY, width, text);
+                f.drawTextCentered(bx, by + deco.textY, width, text);
             });
         }
     }

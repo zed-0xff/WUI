@@ -68,7 +68,7 @@ public final class TestApp {
             if (ref[0].isDone()) break;
         }
 
-        GL11.glDeleteTextures(Element.font.fontTex);
+        Element.disposeFont();
         CursorMgr.destroy();
         GLFW.glfwDestroyWindow(win);
         GLFW.glfwTerminate();

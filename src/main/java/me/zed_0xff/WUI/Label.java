@@ -9,9 +9,10 @@ public class Label extends TextControl {
     public void render(int originX, int originY) {
         if (text == null || text.isEmpty()) return;
         int tx = originX + x, ty = originY + y;
-        withTexture(font.fontTex, () -> {
+        Font f = font();
+        withTexture(f.fontTex, () -> {
             glColor(textColor);
-            font.drawText(tx, ty, text);
+            f.drawText(tx, ty, text);
         });
     }
 }

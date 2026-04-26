@@ -21,7 +21,7 @@ public abstract class ToggleBase extends ButtonBase {
     protected boolean isActiveAt(int mx, int my) {
         if (mx < x || my < y || my >= y + height) return false;
         int iconW = getAtlas().getMetaInt("textX", height + 2);
-        int textW = (text != null && !text.isEmpty()) ? font.measureTextAdvancePx(text) : 0;
+        int textW = (text != null && !text.isEmpty()) ? font().measureTextAdvancePx(text) : 0;
         return mx < x + iconW + textW;
     }
 
@@ -48,9 +48,10 @@ public abstract class ToggleBase extends ButtonBase {
         if (text != null && !text.isEmpty()) {
             int textX = a.getMetaInt("textX", height + 2);
             int textY = a.getMetaInt("textY", 0);
-            withTexture(font.fontTex, () -> {
+            Font f = font();
+            withTexture(f.fontTex, () -> {
                 glColor(textColor);
-                font.drawText(bx + textX, by + textY, text);
+                f.drawText(bx + textX, by + textY, text);
             });
         }
     }

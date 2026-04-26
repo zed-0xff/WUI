@@ -20,7 +20,10 @@ final class ElementDecor {
     public int textX = 0;
     public int textY = 0;
 
-    public ElementDecor(String name) { this.name = name; loadFromJson(name); }
+    public ElementDecor(String name) {
+        this.name = name;
+        loadFromJson(name);
+    }
 
     public boolean isLoaded() { return texture != 0; }
 

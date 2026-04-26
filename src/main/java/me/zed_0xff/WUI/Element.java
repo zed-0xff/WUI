@@ -5,7 +5,22 @@ import org.lwjgl.opengl.GL11;
 public abstract class Element {
     public int x, y, width, height;
 
-    static Font font = new Font();
+    private static Font _font;
+
+    static Font font() {
+        if (_font == null) {
+            _font = new Font();
+        }
+        return _font;
+    }
+
+    static void disposeFont() {
+        if (_font != null && _font.fontTex != 0) {
+            GL11.glDeleteTextures(_font.fontTex);
+            _font.fontTex = 0;
+        }
+        _font = null;
+    }
 
     public Element(int x, int y, int w, int h) {
         this.x = x; this.y = y; this.width = w; this.height = h;

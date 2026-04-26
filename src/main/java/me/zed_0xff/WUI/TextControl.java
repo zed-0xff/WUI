@@ -9,4 +9,12 @@ public abstract class TextControl extends Control {
         super(window, x, y, w, h);
         this.text = text;
     }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public void setTextColor(Color textColor) {
+        this.textColor = textColor;
+    }
 }

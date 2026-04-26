@@ -15,7 +15,7 @@ import java.util.List;
 public class Window extends Element {
     Color bgColor = Color.WHITE;
     String title, status;
-    private final List<Control> controls = new ArrayList<>();
+    protected final List<Control> controls = new ArrayList<>();
 
     // static final Color titleBgColor = Color.NAVY;
     static final Color titleFgColor = Color.WHITE;
@@ -62,6 +62,7 @@ public class Window extends Element {
 
     public void setTitle(String s) { this.title = s; }
     public void setStatus(String s) { this.status = s; }
+    public void setPosition(int x, int y) { this.x = x; this.y = y; }
 
     public boolean contains(int mx, int my) {
         return mx >= x && mx < x + width && my >= y && my < y + height;
@@ -124,6 +125,9 @@ public class Window extends Element {
             if (!controls.isEmpty() && !contentRect.isEmpty()) {
                 int cx = mx - contentRect.x(), cy = my - contentRect.y();
                 for (Control c : controls) {
+                    if (!c.visible) {
+                        continue;
+                    }
                     long cc = c.cursorAt(cx, cy);
                     if (cc != 0) { cur = cc; break; }
                 }
@@ -190,10 +194,10 @@ public class Window extends Element {
             int rx = mx - contentRect.x(), ry = my - contentRect.y();
             if (action == GLFW.GLFW_PRESS) {
                 for (Control c : controls) {
-                    if (c.isActiveAt(rx, ry)) { c.handleMouseButton(action, rx, ry); break; }
+                    if (c.visible && c.isActiveAt(rx, ry)) { c.handleMouseButton(action, rx, ry); break; }
                 }
             } else {
-                for (Control c : controls) c.handleMouseButton(action, rx, ry);
+                for (Control c : controls) if (c.visible) c.handleMouseButton(action, rx, ry);
             }
         }
         return false;
@@ -254,9 +258,10 @@ public class Window extends Element {
 
         _deco.render(x, y, width, height, bgColor);
 
-        withTexture(font.fontTex, () -> {
+        Font f = font();
+        withTexture(f.fontTex, () -> {
             glColor(titleFgColor);
-            font.drawTextCentered(x, y + _deco.textY, width, title);
+            f.drawTextCentered(x, y + _deco.textY, width, title);
         });
 
         // Render child controls clipped to the content rect.
@@ -273,7 +278,9 @@ public class Window extends Element {
                 contentRect.w() * scale,
                 contentRect.h() * scale
             );
-            for (Control c : controls) c.render(contentRect.x(), contentRect.y());
+            for (Control c : controls) {
+                if (c.visible) c.render(contentRect.x(), contentRect.y());
+            }
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
         }
     }
