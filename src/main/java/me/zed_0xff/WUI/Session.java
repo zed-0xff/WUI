@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  *       new Window(0, 0, 400, 200, "Title")
  *           .addControl(w -> new Button(w, 10, 10, 100, 30, "OK") {
  *               protected void onClick() { ref[0].dismiss(); }
- *           }));
+ *           })).setTheme("my-theme");
  *   renderThread.setFrameTask(ref[0]);
  *   ref[0].await();
  *   renderThread.setFrameTask(null);
@@ -41,6 +41,7 @@ public final class Session implements Runnable {
     private boolean prevLeft;
     private float dimAlpha = 0.55f;
     private boolean autoCenter = true;
+    private String themeName;
 
     public Session(long glfwWin, Supplier<Window> factory) {
         this.glfwWin = glfwWin;
@@ -58,6 +59,20 @@ public final class Session implements Runnable {
      * Set to false when the factory positions the window explicitly.
      */
     public Session setAutoCenter(boolean b) { autoCenter = b; return this; }
+
+    /**
+     * Set the theme name used for controls, cursors, and fonts.
+     * Has no effect after the session has started rendering.
+     */
+    public Session setTheme(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("theme name must be set");
+        }
+        if (window == null) {
+            themeName = name;
+        }
+        return this;
+    }
 
     /**
      * Set the UI scale.
@@ -129,7 +144,8 @@ public final class Session implements Runnable {
         }
     }
 
-    public static void init() {
+    public static void init(String themeName) {
+        ControlStyle.setThemeName(themeName);
         CursorMgr.init();
     }
 
@@ -142,6 +158,7 @@ public final class Session implements Runnable {
         if (isDone()) return;
 
         prepareGlfwThreadCheck();
+        applyTheme();
         int[] sz = fbSize();
         resolveScale(requestedScale > 0 ? requestedScale : Utils.detectScale(glfwWin));
         ensureWindow(sz[0], sz[1], true);
@@ -166,6 +183,7 @@ public final class Session implements Runnable {
     public void runRenderOnly(int fbW, int fbH, int uiScale) {
         if (isDone()) return;
 
+        applyTheme();
         resolveScale(uiScale);
         ensureWindow(fbW, fbH, false);
         renderOverlay(fbW, fbH, fbW / scale, fbH / scale);
@@ -184,6 +202,7 @@ public final class Session implements Runnable {
             return Window.HOST_CURSOR_DEFAULT;
         }
 
+        applyTheme();
         resolveScale(uiScale);
         ensureWindow(fbW, fbH, false);
         int vW = fbW / scale;
@@ -211,6 +230,10 @@ public final class Session implements Runnable {
         }
         scale = requestedScale > 0 ? requestedScale : Math.max(1, autoDetectedScale);
         Utils.setUiScale(scale);
+    }
+
+    private void applyTheme() {
+        ControlStyle.setThemeName(themeName);
     }
 
     private void ensureWindow(int fbW, int fbH, boolean initCursors) {

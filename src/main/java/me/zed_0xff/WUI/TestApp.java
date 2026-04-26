@@ -50,6 +50,7 @@ public final class TestApp {
                 .setStatus("This is a test dialog. It should be centered and scaled according to the arguments.")
         )
         .setDimAlpha(0)
+        .setTheme("win31")
         .setScale(scale)
         .setAutoCenter(autoCenter);
 

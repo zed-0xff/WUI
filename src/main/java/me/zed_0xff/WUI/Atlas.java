@@ -28,22 +28,28 @@ final class Atlas {
     /** Load atlas by name: reads {@code /{name}.json} + its image from the classpath. */
     Atlas(String name) {
         JsonBase cfg = Utils.readJson("/" + name + ".json", new Gson(), JsonBase.class);
-        Atlas a = fromConfig(cfg);
+        Atlas a = fromConfig(cfg, "/");
         this.img = a.img; this.w = a.w; this.h = a.h;
         this.tiles = a.tiles; this.metadata = a.metadata;
     }
 
     Atlas(JsonBase cfg) {
-        Atlas a = fromConfig(cfg);
+        Atlas a = fromConfig(cfg, "/");
         this.img = a.img; this.w = a.w; this.h = a.h;
         this.tiles = a.tiles; this.metadata = a.metadata;
     }
 
-    private static Atlas fromConfig(JsonBase cfg) {
+    Atlas(JsonBase cfg, String basePath) {
+        Atlas a = fromConfig(cfg, basePath);
+        this.img = a.img; this.w = a.w; this.h = a.h;
+        this.tiles = a.tiles; this.metadata = a.metadata;
+    }
+
+    private static Atlas fromConfig(JsonBase cfg, String basePath) {
         BufferedImage loaded = null;
         int lw = 0, lh = 0;
         if (cfg != null && cfg.image != null && cfg.atlas != null) {
-            Atlas a = loadResource(resourcePath(cfg.image), cfg.atlas.width, cfg.atlas.height);
+            Atlas a = loadResource(resourcePath(basePath, cfg.image), cfg.atlas.width, cfg.atlas.height);
             if (a != null) { loaded = a.img; lw = a.w; lh = a.h; }
         }
         Atlas out = new Atlas(loaded, lw, lh);
@@ -52,8 +58,12 @@ final class Atlas {
         return out;
     }
 
-    private static String resourcePath(String image) {
-        return image.startsWith("/") ? image : "/" + image;
+    private static String resourcePath(String basePath, String image) {
+        if (image.startsWith("/")) {
+            return image;
+        }
+        String base = basePath != null && !basePath.isEmpty() ? basePath : "/";
+        return base.endsWith("/") ? base + image : base + "/" + image;
     }
 
     boolean isLoaded() { return img != null; }

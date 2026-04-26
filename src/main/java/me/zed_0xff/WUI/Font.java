@@ -47,11 +47,18 @@ public class Font {
     }
 
     public Font() {
-        FontJson cfg = Utils.readJson("/font.json", new Gson(), FontJson.class);
-        if (cfg == null) throw new IllegalStateException("failed reading /font.json from classpath");
-        if (cfg.glyphs == null || cfg.glyphs.isEmpty()) throw new IllegalStateException("no glyphs in font.json");
+        String fontName = ControlStyle.defaultFontName();
+        String fontJson = ControlStyle.fontJsonResource(fontName);
+        FontJson cfg = Utils.readJson(fontJson, new Gson(), FontJson.class);
+        if (java.util.Objects.isNull(cfg)) {
+            throw new IllegalStateException("failed reading " + fontJson + " from classpath");
+        }
+        if (cfg.glyphs == null || cfg.glyphs.isEmpty()) {
+            throw new IllegalStateException("no glyphs in " + fontJson);
+        }
 
-        Atlas a = Atlas.loadResource("/" + cfg.atlas.image, cfg.atlas.width, cfg.atlas.height);
+        Atlas a = Atlas.loadResource(ControlStyle.fontResource(fontName, cfg.atlas.image),
+                cfg.atlas.width, cfg.atlas.height);
         if (a == null) throw new RuntimeException("failed loading font atlas: " + cfg.atlas.image);
         atlasW = a.w;
         atlasH = a.h;

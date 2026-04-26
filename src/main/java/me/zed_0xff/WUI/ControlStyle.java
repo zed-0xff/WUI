@@ -8,13 +8,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Parsed control visuals from {@code /win31.json}. */
+/** Parsed control visuals from the active theme. */
 final class ControlStyle {
-    private static final Theme THEME = loadTheme();
+    private static String themeName;
+    private static Theme theme;
     private static final Map<String, Atlas> atlases = new HashMap<>();
     private static Atlas cursorAtlas;
 
     private ControlStyle() {}
+
+    static void setThemeName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalStateException("WUI theme name is not set");
+        }
+        if (name.equals(themeName)) {
+            return;
+        }
+        themeName = name;
+        theme = loadTheme(themeName);
+        atlases.clear();
+        cursorAtlas = null;
+        Element.disposeFont();
+    }
 
     static Control control(String name) {
         return resolveControl(name);
@@ -38,7 +53,8 @@ final class ControlStyle {
         String key = state.image.name + "@" + state.image.width + "x" + state.image.height;
         Atlas atlas = atlases.get(key);
         if (atlas == null) {
-            atlas = Atlas.loadResource("/" + state.image.name + ".png", state.image.width, state.image.height);
+            atlas = Atlas.loadResource(themeResource(state.image.name + ".png"),
+                    state.image.width, state.image.height);
             if (atlas != null) {
                 atlases.put(key, atlas);
             }
@@ -47,13 +63,33 @@ final class ControlStyle {
     }
 
     static Atlas cursorAtlas() {
-        if (THEME.cursors == null) {
+        Theme theme = requireTheme();
+        if (theme.cursors == null) {
             return null;
         }
         if (cursorAtlas == null) {
-            cursorAtlas = new Atlas(THEME.cursors);
+            cursorAtlas = new Atlas(theme.cursors, themeDir());
         }
         return cursorAtlas;
+    }
+
+    static String defaultFontName() {
+        Theme theme = requireTheme();
+        if (theme.fonts == null || theme.fonts.isEmpty()) {
+            throw new IllegalStateException("WUI theme has no fonts");
+        }
+        return theme.fonts.keySet().iterator().next();
+    }
+
+    static String fontJsonResource(String fontName) {
+        return fontResource(fontName, fontName + ".json");
+    }
+
+    static String fontResource(String fontName, String resourceName) {
+        if (resourceName.startsWith("/")) {
+            return resourceName;
+        }
+        return themeDir() + "/fonts/" + resourceName;
     }
 
     static List<State> visualStates(String controlName, boolean selected, boolean pressed) {
@@ -77,16 +113,36 @@ final class ControlStyle {
         return states;
     }
 
-    private static Theme loadTheme() {
-        Theme theme = Utils.readJson("/win31.json", new Gson(), Theme.class);
-        return theme != null ? theme : new Theme();
+    private static Theme loadTheme(String name) {
+        String path = themeDir(name) + "/theme.json";
+        Theme theme = Utils.readJson(path, new Gson(), Theme.class);
+        if (java.util.Objects.isNull(theme)) {
+            throw new IllegalStateException("failed reading " + path + " from classpath");
+        }
+        return theme;
+    }
+
+    private static String themeResource(String resourceName) {
+        return resourceName.startsWith("/") ? resourceName : themeDir() + "/" + resourceName;
+    }
+
+    private static String themeDir() {
+        if (themeName == null) {
+            throw new IllegalStateException("WUI theme name is not set");
+        }
+        return themeDir(themeName);
+    }
+
+    private static String themeDir(String name) {
+        return "/themes/" + name;
     }
 
     private static Control resolveControl(String name) {
-        if (THEME.controls == null) {
+        Theme theme = requireTheme();
+        if (theme.controls == null) {
             return null;
         }
-        Control control = THEME.controls.get(name);
+        Control control = theme.controls.get(name);
         if (control == null) {
             return null;
         }
@@ -94,11 +150,18 @@ final class ControlStyle {
             Control parent = resolveControl(control.extendsName);
             control = merge(parent, control);
         }
-        Control defaults = THEME.controls.get("default");
+        Control defaults = theme.controls.get("default");
         if (defaults != null && !"default".equals(name)) {
             control = merge(defaults, control);
         }
         return control;
+    }
+
+    private static Theme requireTheme() {
+        if (theme == null) {
+            throw new IllegalStateException("WUI theme name is not set");
+        }
+        return theme;
     }
 
     private static Control merge(Control parent, Control child) {
@@ -205,6 +268,7 @@ final class ControlStyle {
     static final class Theme {
         Map<String, Control> controls;
         Atlas.JsonBase cursors;
+        Map<String, Object> fonts;
     }
 
     static final class Control {
