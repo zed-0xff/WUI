@@ -29,7 +29,7 @@ public final class CursorMgr {
     static long clock()   { return handles.getOrDefault("clock",      0L); }
 
     /** Load custom cursors from classpath; falls back to GLFW standard cursors on any failure. */
-    public static void create() {
+    public static void init() {
         if (initialized) return;
         initialized = true;
 

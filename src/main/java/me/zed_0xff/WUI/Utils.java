@@ -10,6 +10,21 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 public class Utils {
+    /**
+     * Framebuffer-to-window pixel ratio (e.g. 2 on Retina/HiDPI, 1 otherwise).
+     * Must be called from the render thread.
+     */
+    public static int detectScale(long win) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer ww = stack.mallocInt(1), wh = stack.mallocInt(1);
+            IntBuffer fw = stack.mallocInt(1), fh = stack.mallocInt(1);
+            GLFW.glfwGetWindowSize(win, ww, wh);
+            GLFW.glfwGetFramebufferSize(win, fw, fh);
+            int s = ww.get(0) > 0 ? fw.get(0) / ww.get(0) : 1;
+            return Math.max(1, s);
+        }
+    }
+
     /** Map glfwGetCursorPos (window coords) → framebuffer pixel coords used by glOrtho. */
     public static double[] cursorToFramebuffer(long win, double cxWin, double cyWin) {
         try (MemoryStack stack = MemoryStack.stackPush()) {

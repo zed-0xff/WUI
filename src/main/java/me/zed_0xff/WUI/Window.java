@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Win3.1-style faux window: title drag, resize from edges/corners, resize cursors on hover.
- * Coordinates match {@link HelloWorld}: origin top-left, y downward (framebuffer pixels).
+ * Coordinates match {@link TestApp}: origin top-left, y downward (framebuffer pixels).
  */
 public class Window extends Element {
     Color bgColor = Color.WHITE;
@@ -41,12 +41,9 @@ public class Window extends Element {
     int resizeSnapW;
     int resizeSnapH;
 
-    private Rect contentRect;
-
     public Window(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
-        this.title  = title;
-        recalcContentRect();
+        this.title = title;
     }
 
     public Window addControl(java.util.function.Function<Window, Control> factory) {
@@ -123,6 +120,7 @@ public class Window extends Element {
             CursorMgr.set(window, cursorForGrip(g));
         } else if (contains(mx, my)) {
             long cur = 0;
+            Rect contentRect = getContentRect();
             if (!controls.isEmpty() && !contentRect.isEmpty()) {
                 int cx = mx - contentRect.x(), cy = my - contentRect.y();
                 for (Control c : controls) {
@@ -145,53 +143,23 @@ public class Window extends Element {
         int right = sx + sw;
 
         switch (activeResize) {
-            case SE:
-                x = sx; y = sy;
-                width = Math.max(MIN_W, mx - sx);
-                height = Math.max(MIN_H, my - sy);
-                break;
-            case NE:
-                x = sx; y = my;
-                width = Math.max(MIN_W, mx - sx);
-                height = Math.max(MIN_H, bot - y);
-                break;
-            case NW:
-                x = mx; y = my;
-                width = Math.max(MIN_W, right - x);
-                height = Math.max(MIN_H, bot - y);
-                break;
-            case SW:
-                x = mx; y = sy;
-                width = Math.max(MIN_W, right - x);
-                height = Math.max(MIN_H, my - sy);
-                break;
-            case E:
-                x = sx;
-                width = Math.max(MIN_W, mx - sx);
-                break;
-            case W:
-                x = mx;
-                width = Math.max(MIN_W, right - mx);
-                break;
-            case S:
-                y = sy;
-                height = Math.max(MIN_H, my - sy);
-                break;
-            case N:
-                y = my;
-                height = Math.max(MIN_H, bot - my);
-                break;
-            default:
-                break;
+            case SE: x = sx; y = sy; width = Math.max(MIN_W, mx - sx);   height = Math.max(MIN_H, my - sy); break;
+            case NE: x = sx; y = my; width = Math.max(MIN_W, mx - sx);   height = Math.max(MIN_H, bot - y); break;
+            case NW: x = mx; y = my; width = Math.max(MIN_W, right - x); height = Math.max(MIN_H, bot - y); break;
+            case SW: x = mx; y = sy; width = Math.max(MIN_W, right - x); height = Math.max(MIN_H, my - sy); break;
+            case E:  x = sx; width  = Math.max(MIN_W, mx - sx);    break;
+            case W:  x = mx; width  = Math.max(MIN_W, right - mx); break;
+            case S:  y = sy; height = Math.max(MIN_H, my - sy);    break;
+            case N:  y = my; height = Math.max(MIN_H, bot - my);   break;
+            default: break;
         }
         clampResizeInView(viewW, viewH);
-        recalcContentRect();
         CursorMgr.set(window, cursorForGrip(activeResize));
     }
 
     /**
      * @return true if this press starts title drag or resize (caller may skip other click actions).
-     * @param mx,my logical coords (framebuffer px / {@link HelloWorld#uiScale})
+     * @param mx,my logical coords (framebuffer px / {@link TestApp#uiScale})
      */
     public boolean handleMouseButton(long window, int button, int action, int mx, int my) {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
@@ -217,6 +185,7 @@ public class Window extends Element {
             updateHoverCursor(window, mx, my);
         }
         // Forward press/release to child controls (content-relative coords).
+        Rect contentRect = getContentRect();
         if (!controls.isEmpty() && !contentRect.isEmpty()) {
             int rx = mx - contentRect.x(), ry = my - contentRect.y();
             if (action == GLFW.GLFW_PRESS) {
@@ -242,7 +211,6 @@ public class Window extends Element {
             x = mx - dragGrabDx;
             y = my - dragGrabDy;
             clampPositionInView(viewW, viewH);
-            recalcContentRect();
             CursorMgr.set(window, 0);
             return;
         }
@@ -269,15 +237,19 @@ public class Window extends Element {
         y      = Math.max(0, Math.min(y, viewH - height));
     }
 
-    private void recalcContentRect() {
+    public Rect getContentRect() {
         if (_deco.isLoaded()) {
-            contentRect = _deco.contentRect(x, y, width, height);
+            return _deco.contentRect(x, y, width, height);
         } else {
-            contentRect = new Rect(x, y + titleBarHeight, width, height - titleBarHeight);
+            return new Rect(x, y + titleBarHeight, width, height - titleBarHeight);
         }
     }
 
-    public void render() {
+    /**
+     * Render using an explicit logical-to-framebuffer pixel {@code scale}.
+     * Pass 1 for a 1:1 mapping; pass {@link Utils#detectScale} for HiDPI-aware rendering.
+     */
+    public void render(int scale) {
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
         _deco.render(x, y, width, height, bgColor);
@@ -288,8 +260,8 @@ public class Window extends Element {
         });
 
         // Render child controls clipped to the content rect.
+        Rect contentRect = getContentRect();
         if (!controls.isEmpty() && !contentRect.isEmpty()) {
-            int scale = HelloWorld.uiScale();
             IntBuffer vp = BufferUtils.createIntBuffer(4);
             GL11.glGetIntegerv(GL11.GL_VIEWPORT, vp);
             int fbH = vp.get(3);
