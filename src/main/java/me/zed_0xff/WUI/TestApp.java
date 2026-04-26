@@ -42,18 +42,12 @@ public final class TestApp {
         Session[] ref = { null };
         ref[0] = new Session(win, () ->
             new Window(dx, dy, dw, dh, "Window")
-                .addControl(w -> new Button(  w, 10,  10, 100, 20, "OK") {
-                    @Override protected void onClick() { ref[0].dismiss(); }
-                })
-                .addControl(w -> new CheckBox(w, 10,  40, 100, 20, "test"))
-                .addRadioGroup(g -> {
-                    g.button(10, 70, 100, 20, "R1");
-                    g.button(50, 70, 100, 20, "R2");
-                })
-                .addRadioGroup(g -> {
-                    g.button(10, 90, 100, 20, "R3");
-                    g.button(50, 90, 100, 20, "R4");
-                })
+                .addControl(w -> new Label(   w, 10,  10, 100, 20, "label"))
+                .addControl(w -> new Button(  w, 10,  30, 100, 40, "OK") { @Override protected void onClick() { ref[0].dismiss(); } })
+                .addControl(w -> new CheckBox(w, 120,  10, 100, 20, "test"))
+                .addRadioGroup(g -> { g.button(120, 30, 100, 20, "R1"); g.button(160, 30, 100, 20, "R2"); })
+                .addRadioGroup(g -> { g.button(120, 50, 100, 20, "R3"); g.button(160, 50, 100, 20, "R4"); })
+                .setStatus("This is a test dialog. It should be centered and scaled according to the arguments.")
         )
         .setDimAlpha(0)
         .setScale(scale)

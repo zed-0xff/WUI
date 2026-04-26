@@ -1,0 +1,45 @@
+{
+    "theme": "win31",
+    "controls": {
+        "default": {
+            "states": {
+                "disabled": { "tint": "#808080", "modifier": true }
+            }
+        },
+        "label": { "areas": { "label": { "left": 0, "top": 0, "text": { "align": "left" }}}},
+        "button": {
+            "type": "ninepatch",
+            "image": { "name": "button", "width": 70, "height": 23 },
+            "patch": { "left": 4, "top": 4, "right": 4, "bottom": 4 },
+            "areas": {
+                "label": { "left": 4, "top": 4, "right": 4, "bottom": 4, "text": { "align": "center", "valign": "center" }}
+            },
+            "states": { "pressed": { "image": { "name": "buttonDown" }}}
+        },
+        "check_radio": {
+            "type": "image",
+            "image": { "width": 39, "height": 13 },
+            "areas": {
+                "icon":  { "x":  0, "y":  0, "w": 13, "h": 13 },
+                "label": { "x": 18, "y": -2, "text": { "align": "left" }}
+            },
+            "states": {
+                "default":  { "rect": { "x":  0, "y": 0, "w": 13, "h": 13 }},
+                "selected": { "rect": { "x": 13, "y": 0, "w": 13, "h": 13 }, "modifier": true },
+                "pressed":  { "rect": { "x": 26, "y": 0, "w": 13, "h": 13 }, "modifier": true }
+            }
+        },
+        "checkbox":    { "extends": "check_radio", "image": { "name": "checkbox" }},
+        "radiobutton": { "extends": "check_radio", "image": { "name": "radiobutton" }},
+        "window": {
+            "type": "ninepatch",
+            "image": { "name": "window", "width": 47, "height": 51 },
+            "patch": { "left": 4, "right": 4, "top": 23, "bottom": 27, "topLeft": [23, 23], "topRight": [23, 23], "bottomLeft": [23, 27], "bottomRight": [23, 27] },
+            "areas": {
+                "title":   { "top":  4, "left": 23, "right": 23,               "height": 18, "text": { "align": "center", "color": "#ffffff" }},
+                "content": { "top": 23, "left":  4, "right":  4, "bottom": 27 },
+                "status":  {            "left": 14, "right": 14, "bottom":  7, "height": 18, "text": { "align": "left" }}
+            }
+        }
+    }
+}

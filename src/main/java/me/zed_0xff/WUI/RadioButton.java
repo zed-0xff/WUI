@@ -3,7 +3,6 @@ package me.zed_0xff.WUI;
 import org.lwjgl.opengl.GL11;
 
 public class RadioButton extends ToggleBase {
-    private static final Atlas ATLAS = new Atlas("radiobutton");
     private final RadioGroup group;
 
     public RadioButton(RadioGroup group, int x, int y, int w, int h, String text) {
@@ -12,7 +11,7 @@ public class RadioButton extends ToggleBase {
         group.add(this);
     }
 
-    @Override protected Atlas getAtlas() { return ATLAS; }
+    @Override protected String styleName() { return "radiobutton"; }
 
     @Override
     protected void onClick() {

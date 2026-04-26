@@ -15,14 +15,16 @@ final class ElementDecor {
     private Atlas.TileJson bottomLeft, bottomCenter, bottomRight;
 
     private int leftW, rightW, topH, bottomH;
-    private int topLeftW, topRightW, bottomLeftW, bottomRightW;
-
-    public int textX = 0;
-    public int textY = 0;
+    private int topLeftW, topLeftH, topRightW, topRightH;
+    private int bottomLeftW, bottomLeftH, bottomRightW, bottomRightH;
 
     public ElementDecor(String name) {
+        this(name, "default");
+    }
+
+    public ElementDecor(String name, String state) {
         this.name = name;
-        loadFromJson(name);
+        loadFromStyle(name, state);
     }
 
     public boolean isLoaded() { return texture != 0; }
@@ -55,46 +57,59 @@ final class ElementDecor {
 
         Element.withTexture(texture, () -> {
             GL11.glColor3f(1f, 1f, 1f);
-            blit(topLeft,      x,                    y,                topLeftW,    topH);
+            blit(topLeft,      x,                    y,                topLeftW,    topLeftH);
             blit(topCenter,    x + topLeftW,         y,                topMidW,     topH);
-            blit(topRight,     x + w - topRightW,    y,                topRightW,   topH);
+            blit(topRight,     x + w - topRightW,    y,                topRightW,   topRightH);
             blit(middleLeft,   x,                    y + topH,         leftW,       innerH);
             blit(middleCenter, x + leftW,            y + topH,         innerW,      innerH);
             blit(middleRight,  x + w - rightW,       y + topH,         rightW,      innerH);
-            blit(bottomLeft,   x,                    y + h - bottomH,  bottomLeftW,  bottomH);
+            blit(bottomLeft,   x,                    y + h - bottomLeftH, bottomLeftW, bottomLeftH);
             blit(bottomCenter, x + bottomLeftW,      y + h - bottomH,  botMidW,      bottomH);
-            blit(bottomRight,  x + w - bottomRightW, y + h - bottomH,  bottomRightW, bottomH);
+            blit(bottomRight,  x + w - bottomRightW, y + h - bottomRightH, bottomRightW, bottomRightH);
         });
     }
 
-    private static final String[] SLICE_KEYS = {
-        "topLeft",    "topCenter",    "topRight",
-        "middleLeft", "middleCenter", "middleRight",
-        "bottomLeft", "bottomCenter", "bottomRight"
-    };
-
-    private void loadFromJson(String name) {
-        Atlas atlas = new Atlas(name);
-        if (!atlas.isLoaded() || atlas.tiles == null) { warn("atlas load failed"); return; }
-
-        for (String k : SLICE_KEYS) {
-            Atlas.TileJson t = atlas.tiles.get(k);
-            if (t == null || !atlas.fits(t)) { warn("bad tile: " + k); return; }
+    private void loadFromStyle(String name, String stateName) {
+        ControlStyle.State state = ControlStyle.state(name, stateName);
+        Atlas atlas = ControlStyle.atlasFor(state);
+        if (state == null || state.patch == null || atlas == null || !atlas.isLoaded()) {
+            warn("style load failed");
+            return;
         }
 
         texture = atlas.uploadTexture();
         if (texture == 0) { warn("texture upload failed"); return; }
         atlasW = atlas.w; atlasH = atlas.h;
 
-        topLeft    = atlas.tiles.get("topLeft"); topCenter = atlas.tiles.get("topCenter"); topRight = atlas.tiles.get("topRight");
-        middleLeft = atlas.tiles.get("middleLeft"); middleCenter = atlas.tiles.get("middleCenter"); middleRight = atlas.tiles.get("middleRight");
-        bottomLeft = atlas.tiles.get("bottomLeft"); bottomCenter = atlas.tiles.get("bottomCenter"); bottomRight = atlas.tiles.get("bottomRight");
+        ControlStyle.Patch p = state.patch;
+        leftW = p.left;
+        rightW = p.right;
+        topH = p.top;
+        bottomH = p.bottom;
+        topLeftW = p.topLeftW();
+        topLeftH = p.topLeftH();
+        topRightW = p.topRightW();
+        topRightH = p.topRightH();
+        bottomLeftW = p.bottomLeftW();
+        bottomLeftH = p.bottomLeftH();
+        bottomRightW = p.bottomRightW();
+        bottomRightH = p.bottomRightH();
 
-        leftW = middleLeft.w; rightW = middleRight.w; topH = topCenter.h; bottomH = bottomCenter.h;
-        topLeftW = topLeft.w; topRightW = topRight.w; bottomLeftW = bottomLeft.w; bottomRightW = bottomRight.w;
+        topLeft      = tile(0, 0, topLeftW, topLeftH);
+        topCenter    = tile(topLeftW, 0, atlasW - topLeftW - topRightW, p.top);
+        topRight     = tile(atlasW - topRightW, 0, topRightW, topRightH);
+        middleLeft   = tile(0, p.top, p.left, atlasH - p.top - p.bottom);
+        middleCenter = tile(p.left, p.top, atlasW - p.left - p.right, atlasH - p.top - p.bottom);
+        middleRight  = tile(atlasW - p.right, p.top, p.right, atlasH - p.top - p.bottom);
+        bottomLeft   = tile(0, atlasH - bottomLeftH, bottomLeftW, bottomLeftH);
+        bottomCenter = tile(bottomLeftW, atlasH - p.bottom, atlasW - bottomLeftW - bottomRightW, p.bottom);
+        bottomRight  = tile(atlasW - bottomRightW, atlasH - bottomRightH, bottomRightW, bottomRightH);
+    }
 
-        textX = atlas.getMetaInt("textX", textX);
-        textY = atlas.getMetaInt("textY", textY);
+    private static Atlas.TileJson tile(int x, int y, int w, int h) {
+        Atlas.TileJson t = new Atlas.TileJson();
+        t.x = x; t.y = y; t.w = w; t.h = h;
+        return t;
     }
 
     private void blit(Atlas.TileJson r, int sx, int sy, int sw, int sh) {

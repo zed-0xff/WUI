@@ -25,8 +25,6 @@ public class Window extends Element {
     String title, status;
     protected final List<Control> controls = new ArrayList<>();
 
-    // static final Color titleBgColor = Color.NAVY;
-    static final Color titleFgColor = Color.WHITE;
     static final ElementDecor _deco = new ElementDecor("window");
 
     static final int GRIP  = 8;
@@ -68,16 +66,16 @@ public class Window extends Element {
         return this;
     }
 
-    public void setTitle(String s) { this.title = s; }
-    public void setStatus(String s) { this.status = s; }
-    public void setPosition(int x, int y) { this.x = x; this.y = y; }
+    public Window setTitle(String s)        { this.title = s;  return this; }
+    public Window setStatus(String s)       { this.status = s; return this; }
+    public Window setPosition(int x, int y) { this.x = x; this.y = y; return this; }
 
     public boolean contains(int mx, int my) {
         return mx >= x && mx < x + width && my >= y && my < y + height;
     }
 
     public boolean containsTitleBar(int mx, int my) {
-        return mx >= x && mx < x + width && my >= y && my < y + titleBarHeight;
+        return titleRect().contains(mx, my);
     }
 
     /** Title strip excluding edge grips so resize takes priority on corners/top border. */
@@ -85,10 +83,18 @@ public class Window extends Element {
         if (!containsTitleBar(mx, my)) {
             return false;
         }
+        Rect title = titleRect();
         if (mx < x + GRIP || mx >= x + width - GRIP) {
             return false;
         }
-        return my >= y + EDGE;
+        return my >= title.y() + EDGE;
+    }
+
+    private Rect titleRect() {
+        ControlStyle.Area title = styledArea("title");
+        return title != null
+                ? TextControl.resolveAreaRect(x, y, width, height, title)
+                : new Rect(x, y, width, titleBarHeight);
     }
 
     private ResizeGrip hitTestResize(int mx, int my) {
@@ -394,17 +400,31 @@ public class Window extends Element {
      * Pass 1 for a 1:1 mapping; pass {@link Utils#detectScale} for HiDPI-aware rendering.
      */
     public void render(int scale) {
+        TextControl.setClipScale(scale);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
         _deco.render(x, y, width, height, bgColor);
 
         Font f = font();
         withTexture(f.fontTex, () -> {
-            glColor(titleFgColor);
-            f.drawTextCentered(x, y + _deco.textY, width, title);
+            drawWindowText(f, title, styledArea("title"));
+            drawWindowText(f, status, styledArea("status"));
         });
 
         // Render child controls clipped to the content rect.
         renderControlsClipped(scale);
+    }
+
+    private void drawWindowText(Font f, String s, ControlStyle.Area area) {
+        if (s == null || s.isEmpty() || area == null) {
+            return;
+        }
+        glColor(TextControl.styledTextColor(area, Color.BLACK));
+        TextControl.drawAlignedString(f, x, y, width, height, area, s);
+    }
+
+    private static ControlStyle.Area styledArea(String areaName) {
+        ControlStyle.Control control = ControlStyle.control("window");
+        return control != null && control.areas != null ? control.areas.get(areaName) : null;
     }
 }

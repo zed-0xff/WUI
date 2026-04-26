@@ -2,7 +2,7 @@ package me.zed_0xff.WUI;
 
 public class Button extends ButtonBase {
     static final ElementDecor _normalDeco  = new ElementDecor("button");
-    static final ElementDecor _pressedDeco = new ElementDecor("buttonDown");
+    static final ElementDecor _pressedDeco = new ElementDecor("button", "pressed");
 
     Color bgColor = Color.GRAY;
 
@@ -16,10 +16,11 @@ public class Button extends ButtonBase {
         ElementDecor deco = (pressed && _pressedDeco.isLoaded()) ? _pressedDeco : _normalDeco;
         deco.render(bx, by, width, height, bgColor);
         if (text != null && !text.isEmpty()) {
+            ControlStyle.Area label = styledArea("button", "label");
             Font f = font();
             withTexture(f.fontTex, () -> {
-                glColor(textColor);
-                f.drawTextCentered(bx, by + deco.textY, width, text);
+                glColor(styledTextColor(label, textColor));
+                drawAlignedText(f, bx, by, width, height, label);
             });
         }
     }
