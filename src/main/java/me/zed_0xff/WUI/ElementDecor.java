@@ -2,11 +2,16 @@ package me.zed_0xff.WUI;
 
 import org.lwjgl.opengl.GL11;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 9-slice decoration — "cap corners" layout: corners keep their own size,
  * side thickness comes from the middle slices.
  */
 final class ElementDecor {
+    private static final Map<String, ElementDecor> CACHE = new HashMap<>();
+
     private final String name;
     private int texture, atlasW, atlasH;
 
@@ -41,9 +46,11 @@ final class ElementDecor {
     public void render(int x, int y, int w, int h, Color fill) {
         if (isLoaded()) {
             renderInternal(x, y, w, h);
-            Element.fillRect(contentRect(x, y, w, h), fill);
+            if (fill != null) {
+                Element.fillRect(contentRect(x, y, w, h), fill);
+            }
         } else {
-            Element.fillRect(x, y, w, h, fill);
+            Element.fillRect(x, y, w, h, fill != null ? fill : Color.GRAY);
             Element.outlineRect(x, y, w, h, 1, Color.BLACK);
         }
     }
@@ -70,7 +77,62 @@ final class ElementDecor {
     }
 
     private void loadFromStyle(String name, String stateName) {
-        ControlStyle.State state = ControlStyle.state(name, stateName);
+        loadFromState(ControlStyle.state(name, stateName));
+    }
+
+    private static Atlas.TileJson tile(int x, int y, int w, int h) {
+        Atlas.TileJson t = new Atlas.TileJson();
+        t.x = x; t.y = y; t.w = w; t.h = h;
+        return t;
+    }
+
+    private void blit(Atlas.TileJson r, int sx, int sy, int sw, int sh) {
+        if (sw <= 0 || sh <= 0) return;
+        Element.drawTexRect(sx, sy, sw, sh, r, atlasW, atlasH);
+    }
+
+    private void warn(String msg) { System.err.println("ElementDecor(" + name + "): " + msg); }
+
+    static ElementDecor forState(String name, ControlStyle.State state) {
+        if (state == null || state.image == null || state.image.name == null) {
+            return new ElementDecor(name, false);
+        }
+        String key = name + ":" + state.image.name + ":" + patchKey(state.patch);
+        ElementDecor decor = CACHE.get(key);
+        if (decor == null) {
+            decor = new ElementDecor(name, false);
+            decor.loadFromState(state);
+            CACHE.put(key, decor);
+        }
+        return decor;
+    }
+
+    private static String patchKey(ControlStyle.Patch p) {
+        if (p == null) {
+            return "no-patch";
+        }
+        return p.left + "," + p.top + "," + p.right + "," + p.bottom
+                + "|" + cornerKey(p.topLeft)
+                + "|" + cornerKey(p.topRight)
+                + "|" + cornerKey(p.bottomLeft)
+                + "|" + cornerKey(p.bottomRight);
+    }
+
+    private static String cornerKey(int[] corner) {
+        if (corner == null || corner.length == 0) {
+            return "";
+        }
+        return corner[0] + "x" + (corner.length > 1 ? corner[1] : 0);
+    }
+
+    private ElementDecor(String name, boolean load) {
+        this.name = name;
+        if (load) {
+            loadFromStyle(name, "default");
+        }
+    }
+
+    private void loadFromState(ControlStyle.State state) {
         Atlas atlas = ControlStyle.atlasFor(state);
         if (state == null || state.patch == null || atlas == null || !atlas.isLoaded()) {
             warn("style load failed");
@@ -105,17 +167,4 @@ final class ElementDecor {
         bottomCenter = tile(bottomLeftW, atlasH - p.bottom, atlasW - bottomLeftW - bottomRightW, p.bottom);
         bottomRight  = tile(atlasW - bottomRightW, atlasH - bottomRightH, bottomRightW, bottomRightH);
     }
-
-    private static Atlas.TileJson tile(int x, int y, int w, int h) {
-        Atlas.TileJson t = new Atlas.TileJson();
-        t.x = x; t.y = y; t.w = w; t.h = h;
-        return t;
-    }
-
-    private void blit(Atlas.TileJson r, int sx, int sy, int sw, int sh) {
-        if (sw <= 0 || sh <= 0) return;
-        Element.drawTexRect(sx, sy, sw, sh, r, atlasW, atlasH);
-    }
-
-    private void warn(String msg) { System.err.println("ElementDecor(" + name + "): " + msg); }
 }

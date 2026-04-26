@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL11;
 public abstract class TextControl extends Control {
     String text;
     Color textColor = Color.BLACK;
-    private static int clipScale = 1;
 
     public TextControl(Window window, int x, int y, int w, int h, String text) {
         super(window, x, y, w, h);
@@ -25,12 +24,7 @@ public abstract class TextControl extends Control {
     }
 
     protected static ControlStyle.Area styledArea(String controlName, String areaName) {
-        ControlStyle.Control control = ControlStyle.control(controlName);
-        return control != null && control.areas != null ? control.areas.get(areaName) : null;
-    }
-
-    static void setClipScale(int scale) {
-        clipScale = Math.max(1, scale);
+        return ControlStyle.area(controlName, areaName);
     }
 
     protected void drawAlignedText(Font f, int boxX, int boxY, int boxW, int boxH, ControlStyle.Area area) {
@@ -72,6 +66,7 @@ public abstract class TextControl extends Control {
         IntBuffer vp = BufferUtils.createIntBuffer(4);
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, vp);
         int fbH = vp.get(3);
+        int clipScale = Utils.uiScale();
         int sx = labelX * clipScale;
         int sy = fbH - (labelY + labelH) * clipScale;
         int sw = labelW * clipScale;

@@ -24,6 +24,11 @@ final class ControlStyle {
         return control != null ? resolveState(control, stateName) : null;
     }
 
+    static Area area(String controlName, String areaName) {
+        Control control = control(controlName);
+        return control != null && control.areas != null ? control.areas.get(areaName) : null;
+    }
+
     static Atlas atlasFor(State state) {
         if (state == null || state.image == null || state.image.name == null
                 || state.image.width < 1 || state.image.height < 1) {
@@ -40,12 +45,7 @@ final class ControlStyle {
         return atlas;
     }
 
-    static State toggleState(String controlName, boolean selected, boolean pressed) {
-        List<State> states = toggleStates(controlName, selected, pressed);
-        return states.isEmpty() ? null : states.get(states.size() - 1);
-    }
-
-    static List<State> toggleStates(String controlName, boolean selected, boolean pressed) {
+    static List<State> visualStates(String controlName, boolean selected, boolean pressed) {
         Control control = control(controlName);
         if (control == null) {
             return List.of();

@@ -36,7 +36,8 @@ public final class Session implements Runnable {
     private final CountDownLatch latch = new CountDownLatch(1);
 
     private Window window;
-    private int scale = 0; // 0 means auto-detect
+    private int requestedScale = 0; // 0 means auto-detect
+    private int scale = 0; // resolved once per active session
     private boolean prevLeft;
     private float dimAlpha = 0.55f;
     private boolean autoCenter = true;
@@ -59,10 +60,17 @@ public final class Session implements Runnable {
     public Session setAutoCenter(boolean b) { autoCenter = b; return this; }
 
     /**
-     * Set the UI scale (default 1).
+     * Set the UI scale.
      * Set to 0 to auto-detect the scale based on the framebuffer size.
+     * Has no effect after the session has started rendering.
      */
-    public Session setScale(int s) { scale = s; return this; }
+    public Session setScale(int s) {
+        requestedScale = Math.max(0, s);
+        if (window == null) {
+            scale = 0;
+        }
+        return this;
+    }
 
     // -------------------------------------------------------------------------
     // Called from any thread
@@ -135,7 +143,8 @@ public final class Session implements Runnable {
 
         prepareGlfwThreadCheck();
         int[] sz = fbSize();
-        ensureWindow(sz[0], sz[1], scale < 1 ? Utils.detectScale(glfwWin) : scale, true);
+        resolveScale(requestedScale > 0 ? requestedScale : Utils.detectScale(glfwWin));
+        ensureWindow(sz[0], sz[1], true);
         int vW = sz[0] / scale, vH = sz[1] / scale;
 
         renderOverlay(sz[0], sz[1], vW, vH);
@@ -157,7 +166,8 @@ public final class Session implements Runnable {
     public void runRenderOnly(int fbW, int fbH, int uiScale) {
         if (isDone()) return;
 
-        ensureWindow(fbW, fbH, Math.max(1, uiScale), false);
+        resolveScale(uiScale);
+        ensureWindow(fbW, fbH, false);
         renderOverlay(fbW, fbH, fbW / scale, fbH / scale);
     }
 
@@ -174,7 +184,8 @@ public final class Session implements Runnable {
             return Window.HOST_CURSOR_DEFAULT;
         }
 
-        ensureWindow(fbW, fbH, Math.max(1, uiScale), false);
+        resolveScale(uiScale);
+        ensureWindow(fbW, fbH, false);
         int vW = fbW / scale;
         int vH = fbH / scale;
 
@@ -193,10 +204,16 @@ public final class Session implements Runnable {
     // Private
     // -------------------------------------------------------------------------
 
-    private void ensureWindow(int fbW, int fbH, int uiScale, boolean initCursors) {
-        if (scale < 1) {
-            scale = Math.max(1, uiScale);
+    private void resolveScale(int autoDetectedScale) {
+        if (scale >= 1) {
+            Utils.setUiScale(scale);
+            return;
         }
+        scale = requestedScale > 0 ? requestedScale : Math.max(1, autoDetectedScale);
+        Utils.setUiScale(scale);
+    }
+
+    private void ensureWindow(int fbW, int fbH, boolean initCursors) {
         if (window != null) {
             return;
         }
@@ -249,7 +266,7 @@ public final class Session implements Runnable {
             GL11.glEnd();
         }
 
-        window.render(scale);
+        window.render();
 
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glPopMatrix();

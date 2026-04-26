@@ -10,6 +10,16 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 public class Utils {
+    private static int uiScale = 1;
+
+    public static int uiScale() {
+        return uiScale;
+    }
+
+    static void setUiScale(int scale) {
+        uiScale = Math.max(1, scale);
+    }
+
     /**
      * Framebuffer-to-window pixel ratio (e.g. 2 on Retina/HiDPI, 1 otherwise).
      * Must be called from the render thread.

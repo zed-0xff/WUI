@@ -91,7 +91,7 @@ public class Window extends Element {
     }
 
     private Rect titleRect() {
-        ControlStyle.Area title = styledArea("title");
+        ControlStyle.Area title = ControlStyle.area("window", "title");
         return title != null
                 ? TextControl.resolveAreaRect(x, y, width, height, title)
                 : new Rect(x, y, width, titleBarHeight);
@@ -365,14 +365,13 @@ public class Window extends Element {
     }
 
     public Rect getContentRect() {
-        if (_deco.isLoaded()) {
-            return _deco.contentRect(x, y, width, height);
-        } else {
-            return new Rect(x, y + titleBarHeight, width, height - titleBarHeight);
-        }
+        ControlStyle.Area content = ControlStyle.area("window", "content");
+        return content != null
+                ? TextControl.resolveAreaRect(x, y, width, height, content)
+                : _deco.contentRect(x, y, width, height);
     }
 
-    protected void renderControlsClipped(int scale) {
+    protected void renderControlsClipped() {
         Rect contentRect = getContentRect();
         if (controls.isEmpty() || contentRect.isEmpty()) {
             return;
@@ -381,6 +380,7 @@ public class Window extends Element {
         IntBuffer vp = BufferUtils.createIntBuffer(4);
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, vp);
         int fbH = vp.get(3);
+        int scale = Utils.uiScale();
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(
@@ -395,24 +395,28 @@ public class Window extends Element {
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
     }
 
-    /**
-     * Render using an explicit logical-to-framebuffer pixel {@code scale}.
-     * Pass 1 for a 1:1 mapping; pass {@link Utils#detectScale} for HiDPI-aware rendering.
-     */
-    public void render(int scale) {
-        TextControl.setClipScale(scale);
+    public void render() {
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
         _deco.render(x, y, width, height, bgColor);
 
         Font f = font();
         withTexture(f.fontTex, () -> {
-            drawWindowText(f, title, styledArea("title"));
-            drawWindowText(f, status, styledArea("status"));
+            drawWindowText(f, title, ControlStyle.area("window", "title"));
+            drawWindowText(f, status, ControlStyle.area("window", "status"));
         });
 
         // Render child controls clipped to the content rect.
-        renderControlsClipped(scale);
+        renderControlsClipped();
+    }
+
+    /**
+     * Render using an explicit logical-to-framebuffer pixel {@code scale}.
+     * Prefer {@link Session}, which resolves the scale once for the active session.
+     */
+    public void render(int scale) {
+        Utils.setUiScale(scale);
+        render();
     }
 
     private void drawWindowText(Font f, String s, ControlStyle.Area area) {
@@ -421,10 +425,5 @@ public class Window extends Element {
         }
         glColor(TextControl.styledTextColor(area, Color.BLACK));
         TextControl.drawAlignedString(f, x, y, width, height, area, s);
-    }
-
-    private static ControlStyle.Area styledArea(String areaName) {
-        ControlStyle.Control control = ControlStyle.control("window");
-        return control != null && control.areas != null ? control.areas.get(areaName) : null;
     }
 }
