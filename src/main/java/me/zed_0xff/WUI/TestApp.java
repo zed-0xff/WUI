@@ -12,6 +12,7 @@ public final class TestApp {
         int dlgW = 420, dlgH = 260, dlgX = 80, dlgY = 48;
         int scale = 0;
         boolean autoCenter = false;
+        String theme = "win31";
 
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
@@ -22,7 +23,8 @@ public final class TestApp {
                     System.out.println("  -y N                   dialog Y position (default: centered)");
                     System.out.println("  -w, --width  N         dialog width  (default 420)");
                     System.out.println("  -h, --height N         dialog height (default 260)");
-                    System.out.println("  -c, --center           center the dialog (default false)");
+                    System.out.println("  -c, --center           center the dialog (default: false)");
+                    System.out.println("  -t, --theme            theme name (default: " + theme + ")");
                     return;
                 case "-s": case "--scale":             scale = Integer.parseInt(args[++i]); break;
                 case "-x": case "--x":                  dlgX = Integer.parseInt(args[++i]); break;
@@ -30,6 +32,7 @@ public final class TestApp {
                 case "-w": case "--w": case "--width":  dlgW = Integer.parseInt(args[++i]); break;
                 case "-h": case "--h": case "--height": dlgH = Integer.parseInt(args[++i]); break;
                 case "-c": case "--center":             autoCenter = true; break;
+                case "-t": case "--theme":              theme = args[++i]; break;
                 default:
                     System.err.println("Unknown argument: " + args[i]);
                     System.exit(1);
@@ -50,7 +53,7 @@ public final class TestApp {
                 .setStatus("This is a test dialog. It should be centered and scaled according to the arguments.")
         )
         .setDimAlpha(0)
-        .setTheme("win31")
+        .setTheme(theme)
         .setScale(scale)
         .setAutoCenter(autoCenter);
 
