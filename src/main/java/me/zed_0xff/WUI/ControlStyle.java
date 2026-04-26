@@ -12,6 +12,7 @@ import java.util.Map;
 final class ControlStyle {
     private static final Theme THEME = loadTheme();
     private static final Map<String, Atlas> atlases = new HashMap<>();
+    private static Atlas cursorAtlas;
 
     private ControlStyle() {}
 
@@ -45,6 +46,16 @@ final class ControlStyle {
         return atlas;
     }
 
+    static Atlas cursorAtlas() {
+        if (THEME.cursors == null) {
+            return null;
+        }
+        if (cursorAtlas == null) {
+            cursorAtlas = new Atlas(THEME.cursors);
+        }
+        return cursorAtlas;
+    }
+
     static List<State> visualStates(String controlName, boolean selected, boolean pressed) {
         Control control = control(controlName);
         if (control == null) {
@@ -67,7 +78,7 @@ final class ControlStyle {
     }
 
     private static Theme loadTheme() {
-        Theme theme = Atlas.readJson("/win31.json", new Gson(), Theme.class);
+        Theme theme = Utils.readJson("/win31.json", new Gson(), Theme.class);
         return theme != null ? theme : new Theme();
     }
 
@@ -193,6 +204,7 @@ final class ControlStyle {
 
     static final class Theme {
         Map<String, Control> controls;
+        Atlas.JsonBase cursors;
     }
 
     static final class Control {

@@ -1,13 +1,19 @@
 package me.zed_0xff.WUI;
 
+import com.google.gson.Gson;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryStack;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class Utils {
     private static int uiScale = 1;
@@ -18,6 +24,16 @@ public class Utils {
 
     static void setUiScale(int scale) {
         uiScale = Math.max(1, scale);
+    }
+
+    /** Parse a classpath JSON resource into {@code cls}. Returns {@code null} on any error. */
+    static <T> T readJson(String resourcePath, Gson gson, Class<T> cls) {
+        try (InputStream is = Utils.class.getResourceAsStream(resourcePath)) {
+            if (is == null) return null;
+            return gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), cls);
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     /**

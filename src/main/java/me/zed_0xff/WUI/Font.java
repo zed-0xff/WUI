@@ -47,7 +47,7 @@ public class Font {
     }
 
     public Font() {
-        FontJson cfg = Atlas.readJson("/font.json", new Gson(), FontJson.class);
+        FontJson cfg = Utils.readJson("/font.json", new Gson(), FontJson.class);
         if (cfg == null) throw new IllegalStateException("failed reading /font.json from classpath");
         if (cfg.glyphs == null || cfg.glyphs.isEmpty()) throw new IllegalStateException("no glyphs in font.json");
 

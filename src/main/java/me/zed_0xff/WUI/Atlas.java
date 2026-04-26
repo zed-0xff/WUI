@@ -7,9 +7,7 @@ import org.lwjgl.BufferUtils;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import javax.imageio.ImageIO;
 
 /**
@@ -29,16 +27,33 @@ final class Atlas {
 
     /** Load atlas by name: reads {@code /{name}.json} + its image from the classpath. */
     Atlas(String name) {
-        JsonBase cfg = readJson("/" + name + ".json", new Gson(), JsonBase.class);
+        JsonBase cfg = Utils.readJson("/" + name + ".json", new Gson(), JsonBase.class);
+        Atlas a = fromConfig(cfg);
+        this.img = a.img; this.w = a.w; this.h = a.h;
+        this.tiles = a.tiles; this.metadata = a.metadata;
+    }
+
+    Atlas(JsonBase cfg) {
+        Atlas a = fromConfig(cfg);
+        this.img = a.img; this.w = a.w; this.h = a.h;
+        this.tiles = a.tiles; this.metadata = a.metadata;
+    }
+
+    private static Atlas fromConfig(JsonBase cfg) {
         BufferedImage loaded = null;
         int lw = 0, lh = 0;
         if (cfg != null && cfg.image != null && cfg.atlas != null) {
-            Atlas a = loadResource("/" + cfg.image, cfg.atlas.width, cfg.atlas.height);
+            Atlas a = loadResource(resourcePath(cfg.image), cfg.atlas.width, cfg.atlas.height);
             if (a != null) { loaded = a.img; lw = a.w; lh = a.h; }
         }
-        this.img = loaded; this.w = lw; this.h = lh;
-        this.tiles    = cfg != null ? cfg.tiles    : null;
-        this.metadata = cfg != null ? cfg.metadata : null;
+        Atlas out = new Atlas(loaded, lw, lh);
+        out.tiles = cfg != null ? cfg.tiles : null;
+        out.metadata = cfg != null ? cfg.metadata : null;
+        return out;
+    }
+
+    private static String resourcePath(String image) {
+        return image.startsWith("/") ? image : "/" + image;
     }
 
     boolean isLoaded() { return img != null; }
@@ -96,16 +111,6 @@ final class Atlas {
                 Utils.putArgbAsRgba(buf, img.getRGB(t.x + x, t.y + y));
         buf.flip();
         return buf;
-    }
-
-    /** Parse a classpath JSON resource into {@code cls}. Returns {@code null} on any error. */
-    static <T> T readJson(String resourcePath, Gson gson, Class<T> cls) {
-        try (InputStream is = Atlas.class.getResourceAsStream(resourcePath)) {
-            if (is == null) return null;
-            return gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), cls);
-        } catch (IOException e) {
-            return null;
-        }
     }
 
     // --- shared JSON model ---

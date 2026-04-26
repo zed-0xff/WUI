@@ -40,8 +40,8 @@ public final class HostCursorProvider {
         }
         initialized = true;
 
-        Atlas atlas = new Atlas("cursors");
-        if (atlas.isLoaded() && atlas.tiles != null) {
+        Atlas atlas = ControlStyle.cursorAtlas();
+        if (atlas != null && atlas.isLoaded() && atlas.tiles != null) {
             arrow = createCursor(atlas, "arrow", GLFW.GLFW_ARROW_CURSOR);
             hand = createCursor(atlas, "hand", GLFW.GLFW_HAND_CURSOR);
             resizeH = createCursor(atlas, "resizeH", GLFW.GLFW_HRESIZE_CURSOR);

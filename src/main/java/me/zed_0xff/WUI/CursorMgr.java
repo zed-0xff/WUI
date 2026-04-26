@@ -11,7 +11,7 @@ import java.util.Map;
 
 /** GLFW cursor handles. Call {@link #create} after GLFW init, {@link #destroy} on shutdown. */
 public final class CursorMgr {
-    // Single source of truth: tile names from cursors.json, in load order.
+    // Tile names expected in theme["cursors"], in load order.
     private static final String[] TILE_NAMES = {
         "arrow", "resizeH", "resizeV", "resizeNWSE", "resizeNESW", "text", "hand", "clock"
     };
@@ -33,8 +33,8 @@ public final class CursorMgr {
         if (initialized) return;
         initialized = true;
 
-        Atlas atlas = new Atlas("cursors");
-        if (!atlas.isLoaded() || atlas.tiles == null
+        Atlas atlas = ControlStyle.cursorAtlas();
+        if (atlas == null || !atlas.isLoaded() || atlas.tiles == null
                 || !atlas.tiles.keySet().containsAll(Arrays.asList(TILE_NAMES))) {
             createStandard(); return;
         }
