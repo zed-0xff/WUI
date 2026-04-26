@@ -11,9 +11,6 @@ public abstract class ToggleBase extends ButtonBase {
 
     protected abstract String styleName();
 
-    /** Draw the icon when the atlas is not loaded. */
-    protected abstract void renderFallback(int bx, int by);
-
     @Override
     protected void onClick() { checked = !checked; }
 
@@ -28,7 +25,6 @@ public abstract class ToggleBase extends ButtonBase {
     @Override
     public void render(int originX, int originY) {
         int bx = originX + x, by = originY + y;
-        boolean rendered = false;
 
         for (ControlStyle.State state : ControlStyle.toggleStates(styleName(), checked, pressed)) {
             Atlas a = ControlStyle.atlasFor(state);
@@ -36,16 +32,12 @@ public abstract class ToggleBase extends ButtonBase {
                 if (a.texId == 0) a.texId = a.uploadTexture();
                 Atlas.TileJson t = tile(state.rect);
                 if (t != null && a.texId != 0) {
-                    rendered = true;
                     withTexture(a.texId, () -> {
                         GL11.glColor3f(1f, 1f, 1f);
                         drawTexRect(bx, by, t.w, t.h, t, a.w, a.h);
                     });
                 }
             }
-        }
-        if (!rendered) {
-            renderFallback(bx, by);
         }
 
         if (text != null && !text.isEmpty()) {

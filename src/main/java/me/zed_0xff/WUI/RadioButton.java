@@ -1,7 +1,5 @@
 package me.zed_0xff.WUI;
 
-import org.lwjgl.opengl.GL11;
-
 public class RadioButton extends ToggleBase {
     private final RadioGroup group;
 
@@ -16,29 +14,5 @@ public class RadioButton extends ToggleBase {
     @Override
     protected void onClick() {
         if (!checked) group.select(this);
-    }
-
-    @Override
-    protected void renderFallback(int bx, int by) {
-        int r = height / 2;
-        int cx = bx + r, cy = by + r;
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        glColor(Color.BLACK);
-        GL11.glBegin(GL11.GL_LINE_LOOP);
-        for (int i = 0; i < 12; i++) {
-            double a = 2 * Math.PI * i / 12;
-            GL11.glVertex2f((float)(cx + r * Math.cos(a)), (float)(cy + r * Math.sin(a)));
-        }
-        GL11.glEnd();
-        if (checked) {
-            int ir = r - 3;
-            glColor(textColor);
-            GL11.glBegin(GL11.GL_POLYGON);
-            for (int i = 0; i < 12; i++) {
-                double a = 2 * Math.PI * i / 12;
-                GL11.glVertex2f((float)(cx + ir * Math.cos(a)), (float)(cy + ir * Math.sin(a)));
-            }
-            GL11.glEnd();
-        }
     }
 }
