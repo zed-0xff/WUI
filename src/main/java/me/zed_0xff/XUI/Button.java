@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 public class Button extends ButtonBase {
     public Button(Window window, int x, int y, int w, int h, String text) {

@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.Gson;
@@ -19,7 +19,7 @@ final class ControlStyle {
 
     static void setThemeName(String name) {
         if (name == null || name.isBlank()) {
-            throw new IllegalStateException("WUI theme name is not set");
+            throw new IllegalStateException("XUI theme name is not set");
         }
         if (name.equals(themeName)) {
             return;
@@ -76,7 +76,7 @@ final class ControlStyle {
     static String defaultFontName() {
         Theme theme = requireTheme();
         if (theme.fonts == null || theme.fonts.isEmpty()) {
-            throw new IllegalStateException("WUI theme has no fonts");
+            throw new IllegalStateException("XUI theme has no fonts");
         }
         return theme.fonts.keySet().iterator().next();
     }
@@ -128,7 +128,7 @@ final class ControlStyle {
 
     private static String themeDir() {
         if (themeName == null) {
-            throw new IllegalStateException("WUI theme name is not set");
+            throw new IllegalStateException("XUI theme name is not set");
         }
         return themeDir(themeName);
     }
@@ -159,7 +159,7 @@ final class ControlStyle {
 
     private static Theme requireTheme() {
         if (theme == null) {
-            throw new IllegalStateException("WUI theme name is not set");
+            throw new IllegalStateException("XUI theme name is not set");
         }
         return theme;
     }

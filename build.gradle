@@ -25,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'me.zed_0xff.WUI.TestApp'
+    mainClass = 'me.zed_0xff.XUI.TestApp'
 }
 
 tasks.named('compileJava', JavaCompile) {

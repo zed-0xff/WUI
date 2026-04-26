@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 import com.google.gson.Gson;
 

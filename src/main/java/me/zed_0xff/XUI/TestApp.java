@@ -1,10 +1,10 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 
-/** Standalone test application for the WUI library. */
+/** Standalone test application for the XUI library. */
 public final class TestApp {
     static int winW = 640, winH = 480;
 
@@ -74,7 +74,7 @@ public final class TestApp {
 
     private static long initGlfw() {
         if (!GLFW.glfwInit()) throw new IllegalStateException("glfwInit failed");
-        long win = GLFW.glfwCreateWindow(winW, winH, "WUI Test", 0, 0);
+        long win = GLFW.glfwCreateWindow(winW, winH, "XUI Test", 0, 0);
         if (win == 0) throw new RuntimeException("glfwCreateWindow failed");
         GLFW.glfwMakeContextCurrent(win);
         GLFW.glfwSwapInterval(1);

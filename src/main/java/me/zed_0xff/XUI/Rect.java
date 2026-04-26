@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 /**
  * Simple integer rectangle in logical UI coordinates.

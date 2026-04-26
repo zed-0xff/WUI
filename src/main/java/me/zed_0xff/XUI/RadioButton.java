@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 public class RadioButton extends ToggleBase {
     private final RadioGroup group;

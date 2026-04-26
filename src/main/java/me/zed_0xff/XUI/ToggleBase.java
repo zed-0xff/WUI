@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 public abstract class ToggleBase extends ButtonBase {
     boolean checked;

@@ -1,11 +1,11 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.system.MemoryStack;
 
 /**
- * Custom WUI cursor handles for hosts that drive WUI without {@link CursorMgr}.
+ * Custom XUI cursor handles for hosts that drive XUI without {@link CursorMgr}.
  *
  * <p>Call from the host's GLFW/render context thread. Falls back to standard
  * GLFW cursors when the cursor atlas cannot be loaded.

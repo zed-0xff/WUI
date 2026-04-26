@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 public class CheckBox extends ToggleBase {
     public CheckBox(Window window, int x, int y, int w, int h, String text) {

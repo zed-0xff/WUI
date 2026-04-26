@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 public abstract class Control extends Element {
     public boolean enabled = true;
@@ -31,6 +31,6 @@ public abstract class Control extends Element {
     /** Return the cursor handle to use when the mouse is at (mx, my) in content-relative coords, or 0 for default. */
     public long cursorAt(int mx, int my) { return 0; }
 
-    /** Host-renderer cursor kind for integrations that do not use WUI's GLFW cursor handles. */
+    /** Host-renderer cursor kind for integrations that do not use XUI's GLFW cursor handles. */
     public int hostCursorAt(int mx, int my) { return Window.HOST_CURSOR_DEFAULT; }
 }

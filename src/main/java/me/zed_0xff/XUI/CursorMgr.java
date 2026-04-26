@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWImage;

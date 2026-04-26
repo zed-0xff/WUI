@@ -1,4 +1,4 @@
-package me.zed_0xff.WUI;
+package me.zed_0xff.XUI;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.BufferUtils;
@@ -284,7 +284,7 @@ public class Window extends Element {
 
     /**
      * Host-provided cursor update for embedded renderers that cannot safely call
-     * GLFW from WUI. Returns one of {@code HOST_CURSOR_*}.
+     * GLFW from XUI. Returns one of {@code HOST_CURSOR_*}.
      */
     public int handleHostCursorPos(int mx, int my, int viewW, int viewH, boolean leftDown) {
         if (activeResize != ResizeGrip.NONE && leftDown) {
