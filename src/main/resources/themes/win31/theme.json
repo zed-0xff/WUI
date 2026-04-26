@@ -21,7 +21,7 @@
             "type": "image",
             "image": { "width": 39, "height": 13 },
             "areas": {
-                "icon":  { "x":  0, "y":  0, "w": 13, "h": 13 },
+                "image": { "x":  0, "y":  0, "w": 13, "h": 13 },
                 "label": { "x": 18, "y": -2, "text": { "align": "left" }}
             },
             "states": {

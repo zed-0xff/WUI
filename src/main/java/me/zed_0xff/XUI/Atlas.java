@@ -16,32 +16,34 @@ import javax.imageio.ImageIO;
  */
 final class Atlas {
     final BufferedImage img;
+    final boolean allowScale;
     final int w, h;
     java.util.Map<String, TileJson> tiles;
     java.util.Map<String, String> metadata;
     int texId;
 
-    private Atlas(BufferedImage img, int w, int h) {
+    private Atlas(BufferedImage img, int w, int h, boolean allowScale) {
         this.img = img; this.w = w; this.h = h;
+        this.allowScale = allowScale;
     }
 
     /** Load atlas by name: reads {@code /{name}.json} + its image from the classpath. */
     Atlas(String name) {
         JsonBase cfg = Utils.readJson("/" + name + ".json", new Gson(), JsonBase.class);
         Atlas a = fromConfig(cfg, "/");
-        this.img = a.img; this.w = a.w; this.h = a.h;
+        this.img = a.img; this.w = a.w; this.h = a.h; this.allowScale = a.allowScale;
         this.tiles = a.tiles; this.metadata = a.metadata;
     }
 
     Atlas(JsonBase cfg) {
         Atlas a = fromConfig(cfg, "/");
-        this.img = a.img; this.w = a.w; this.h = a.h;
+        this.img = a.img; this.w = a.w; this.h = a.h; this.allowScale = a.allowScale;
         this.tiles = a.tiles; this.metadata = a.metadata;
     }
 
     Atlas(JsonBase cfg, String basePath) {
         Atlas a = fromConfig(cfg, basePath);
-        this.img = a.img; this.w = a.w; this.h = a.h;
+        this.img = a.img; this.w = a.w; this.h = a.h; this.allowScale = a.allowScale;
         this.tiles = a.tiles; this.metadata = a.metadata;
     }
 
@@ -52,7 +54,8 @@ final class Atlas {
             Atlas a = loadResource(resourcePath(basePath, cfg.image), cfg.atlas.width, cfg.atlas.height);
             if (a != null) { loaded = a.img; lw = a.w; lh = a.h; }
         }
-        Atlas out = new Atlas(loaded, lw, lh);
+        boolean allowScale = false;
+        Atlas out = new Atlas(loaded, lw, lh, allowScale);
         out.tiles = cfg != null ? cfg.tiles : null;
         out.metadata = cfg != null ? cfg.metadata : null;
         return out;
@@ -67,6 +70,7 @@ final class Atlas {
     }
 
     boolean isLoaded() { return img != null; }
+    boolean allowScale() { return allowScale; }
 
     int getMetaInt(String key, int fallback) {
         return parseMeta(metadata, key, fallback);
@@ -84,6 +88,9 @@ final class Atlas {
      * @return loaded Atlas, or {@code null} on any error
      */
     static Atlas loadResource(String resourcePath, int atlasW, int atlasH) {
+        return loadResource(resourcePath, atlasW, atlasH, false);
+    }
+    static Atlas loadResource(String resourcePath, int atlasW, int atlasH, boolean allowScale) {
         if (atlasW < 1 || atlasH < 1) { warn("invalid size " + atlasW + "x" + atlasH); return null; }
         BufferedImage img;
         try (InputStream is = Atlas.class.getResourceAsStream(resourcePath)) {
@@ -98,7 +105,7 @@ final class Atlas {
                 + " != declared " + atlasW + "x" + atlasH + " (" + resourcePath + ")");
             return null;
         }
-        return new Atlas(img, atlasW, atlasH);
+        return new Atlas(img, atlasW, atlasH, allowScale);
     }
 
     /** True if {@code t} has positive dimensions and lies entirely within the atlas. */

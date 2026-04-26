@@ -11,8 +11,8 @@ import java.util.Map;
 /** Parsed control visuals from the active theme. */
 final class ControlStyle {
     static final int VISUAL_SELECTED = 1;
-    static final int VISUAL_PRESSED = 1 << 1;
-    static final int VISUAL_HOVERED = 1 << 2;
+    static final int VISUAL_PRESSED  = 1 << 1;
+    static final int VISUAL_HOVERED  = 1 << 2;
 
     private static final Gson THEME_GSON = Color.gson();
 
@@ -345,12 +345,12 @@ final class ControlStyle {
         int left, right, top, bottom;
         int[] topLeft, topRight, bottomLeft, bottomRight;
 
-        int topLeftW() { return dim(topLeft, 0, left); }
-        int topLeftH() { return dim(topLeft, 1, top); }
-        int topRightW() { return dim(topRight, 0, right); }
-        int topRightH() { return dim(topRight, 1, top); }
-        int bottomLeftW() { return dim(bottomLeft, 0, left); }
-        int bottomLeftH() { return dim(bottomLeft, 1, bottom); }
+        int topLeftW()     { return dim(topLeft,     0, left); }
+        int topLeftH()     { return dim(topLeft,     1, top); }
+        int topRightW()    { return dim(topRight,    0, right); }
+        int topRightH()    { return dim(topRight,    1, top); }
+        int bottomLeftW()  { return dim(bottomLeft,  0, left); }
+        int bottomLeftH()  { return dim(bottomLeft,  1, bottom); }
         int bottomRightW() { return dim(bottomRight, 0, right); }
         int bottomRightH() { return dim(bottomRight, 1, bottom); }
 

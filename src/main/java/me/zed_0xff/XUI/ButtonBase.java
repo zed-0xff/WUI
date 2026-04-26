@@ -40,7 +40,7 @@ public abstract class ButtonBase extends TextControl {
 
     protected Iterable<ControlStyle.State> visualStates() {
         int flags = (hovered ? ControlStyle.VISUAL_HOVERED : 0)
-                | (pressed ? ControlStyle.VISUAL_PRESSED : 0);
+                  | (pressed ? ControlStyle.VISUAL_PRESSED : 0);
         return ControlStyle.visualStates(styleName(), flags);
     }
 
@@ -68,7 +68,7 @@ public abstract class ButtonBase extends TextControl {
                 ElementDecor decor = ElementDecor.forState(styleName, state);
                 decor.render(bx, by, width, height, fill);
             } else if ("image".equals(state.type) && state.rect != null) {
-                renderImageState(state, bx, by);
+                renderImageState(state, bx, by, getArea("image"));
             } else {
                 Color bg = ControlStyle.bgColor(state);
                 if (bg != null) {
@@ -78,19 +78,23 @@ public abstract class ButtonBase extends TextControl {
         }
     }
 
-    private void renderImageState(ControlStyle.State state, int bx, int by) {
-        Atlas a = ControlStyle.atlasFor(state);
-        if (a == null || !a.isLoaded()) {
+    private void renderImageState(ControlStyle.State state, int bx, int by, ControlStyle.Area area) {
+        Atlas atlas = ControlStyle.atlasFor(state);
+        if (atlas == null || !atlas.isLoaded()) {
             return;
         }
-        if (a.texId == 0) a.texId = a.uploadTexture();
-        Atlas.TileJson t = tile(state.rect);
-        if (a.texId == 0 || !a.fits(t)) {
+        if (atlas.texId == 0) atlas.texId = atlas.uploadTexture();
+        Atlas.TileJson tile = tile(state.rect);
+        if (atlas.texId == 0 || !atlas.fits(tile)) {
             return;
         }
-        withTexture(a.texId, () -> {
-            GL11.glColor3f(1f, 1f, 1f);
-            drawTexRect(bx, by, t.w, t.h, t, a.w, a.h);
+        withTexture(atlas.texId, () -> {
+            int w = tile.w, h = tile.h;
+            if (area != null) {
+                w = area.w; h = area.h;
+            }
+            GL11.glColor3f(1f, 1f, 1f); // reset tint color before drawing an image
+            drawTexRect(bx, by, w, h, tile, atlas.w, atlas.h);
         });
     }
 
