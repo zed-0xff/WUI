@@ -10,6 +10,7 @@ public class Label extends TextControl {
         if (text == null || text.isEmpty()) return;
         int tx = originX + x, ty = originY + y;
         ControlStyle.Area label = getArea("label");
+        renderAreaBorders(tx, ty, width, height);
         Font f = font();
         withTexture(f.fontTex, () -> {
             glColor(styledTextColor(label, textColor));

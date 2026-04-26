@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 
 /** Parsed control visuals from the active theme. */
 final class ControlStyle {
@@ -49,6 +50,11 @@ final class ControlStyle {
     static Area area(String controlName, String areaName) {
         Control control = control(controlName);
         return control != null && control.areas != null ? control.areas.get(areaName) : null;
+    }
+
+    static Iterable<Area> areas(String controlName) {
+        Control control = control(controlName);
+        return control != null && control.areas != null ? control.areas.values() : Collections.emptyList();
     }
 
     static Color bgColor(String controlName, Color fallback) {
@@ -380,6 +386,7 @@ final class ControlStyle {
 
         Integer left, top, right, bottom;
         Text text;
+        Border border;
 
         int x(int fallback) { return x != null ? x : fallback; }
         int y(int fallback) { return y != null ? y : fallback; }

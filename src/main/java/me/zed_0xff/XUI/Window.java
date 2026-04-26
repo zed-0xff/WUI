@@ -418,6 +418,7 @@ public class Window extends Element {
 
         _deco.render(x, y, width, height, bgColor);
         renderBorder(x, y, width, height);
+        renderAreaBorders(x, y, width, height);
 
         Font f = font();
         withTexture(f.fontTex, () -> {

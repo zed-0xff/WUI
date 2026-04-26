@@ -42,6 +42,20 @@ public abstract class Element {
         outlineRect(x, y, w, h, border.size, border.color != null ? border.color : Color.BLACK);
     }
 
+    protected void renderAreaBorders(int x, int y, int w, int h) {
+        for (ControlStyle.Area area : ControlStyle.areas(styleName())) {
+            ControlStyle.Border border = area.border;
+            if (border == null || border.size < 1) {
+                continue;
+            }
+            Rect r = TextControl.resolveAreaRect(x, y, w, h, area);
+            if (!r.isEmpty()) {
+                outlineRect(r.x(), r.y(), r.w(), r.h(), border.size,
+                        border.color != null ? border.color : Color.BLACK);
+            }
+        }
+    }
+
     static void glColor(Color c) { c.applyGl(); }
 
     static void fillRect(int x0, int y0, int w, int h, Color color) {

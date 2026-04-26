@@ -1,0 +1,39 @@
+{
+    "theme": "pz",
+    "controls": {
+        "default": {
+            "bgcolor": "#000000",
+            "fgcolor": "#ffffff"
+        },
+        "label": { "areas": { "label": { "left": 0, "top": 0, "text": { "align": "left" }}}},
+        "button": {
+            "areas": {
+                "label": { "left": 1, "top": 1, "right": 1, "bottom": 1, "text": { "align": "center", "valign": "center" }}
+            },
+            "states": {
+                "hovered": { "bgcolor": { "r":0.3, "g":0.3, "b":0.3, "a":1.0 }}
+            }
+        },
+        "check_radio": {
+            "type": "image",
+            "image": { "name": "tick", "width":64, "height":64 },
+            "areas": {
+                "image": { "x":  0, "y": 0, "w": 22, "h": 22, "border": { "size": 1, "color": { "r":1, "g":1, "b":1, "a":0.2 }}},
+                "label": { "x": 27, "y": 2, "text": { "align": "left" }}
+            },
+            "states": {
+                "selected": { "rect": { "x":  0, "y":  0, "w": 64, "h": 64 }, "modifier": true }
+            }
+        },
+        "checkbox":    { "extends": "check_radio" },
+        "radiobutton": { "extends": "check_radio" },
+        "window": {
+            "areas": {
+                "title": { "top": 0, "left": 0, "right": 0, "height": 18, "text": { "align": "center" }}
+            }
+        }
+    },
+    "fonts": {
+        "win31": {}
+    } 
+}
