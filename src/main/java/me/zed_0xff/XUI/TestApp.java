@@ -57,10 +57,14 @@ public final class TestApp {
         .setScale(scale)
         .setAutoCenter(autoCenter);
 
+        // necessary to redraw WHILE window is being resized, otherwise it will stretch the last frame and look bad
+        GLFW.glfwSetWindowRefreshCallback(win, refreshedWin -> {
+            renderFrame(refreshedWin, ref[0]);
+            GLFW.glfwSwapBuffers(refreshedWin);
+        });
+
         while (!GLFW.glfwWindowShouldClose(win)) {
-            GL11.glClearColor(Color.GRAY.getRf(), Color.GRAY.getGf(), Color.GRAY.getBf(), 1);
-            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-            ref[0].run();
+            renderFrame(win, ref[0]);
             GLFW.glfwSwapBuffers(win);
             GLFW.glfwPollEvents();
             if (ref[0].isDone()) break;
@@ -84,5 +88,11 @@ public final class TestApp {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         return win;
+    }
+
+    static void renderFrame(long glWindow, Session session) {
+        GL11.glClearColor(Color.GRAY.getRf(), Color.GRAY.getGf(), Color.GRAY.getBf(), 1);
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+        session.run();
     }
 }
